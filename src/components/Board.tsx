@@ -4,7 +4,7 @@ import Controls from './Controls';
 import { showSuccess, showError } from '@/utils/toast';
 import KnightSolverWorker from '../workers/knightSolver?worker'; // Import the worker
 
-const BOARD_SIZE = 8;
+const BOARD_SIZE = 5; // Changed from 8 to 5
 
 const knightMoves = [
   [-2, -1], [-2, 1], [-1, -2], [-1, 2],
@@ -204,7 +204,7 @@ const Board: React.FC = () => {
   return (
     <div className="flex flex-col items-center p-4">
       <h2 className="text-2xl font-bold mb-4">Knight's Tour</h2>
-      <div className="grid grid-cols-8 border border-gray-400 dark:border-gray-600">
+      <div className="grid grid-cols-5 border border-gray-400 dark:border-gray-600"> {/* Changed grid-cols-8 to grid-cols-5 */}
         {board.map((rowArr, rowIndex) =>
           rowArr.map((_, colIndex) => (
             <Square
