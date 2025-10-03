@@ -4,9 +4,8 @@ import Controls from './Controls';
 import GameProgress from './GameProgress';
 import { showSuccess, showError } from '@/utils/toast';
 import KnightSolverWorker from '../workers/knightSolver?worker';
-import LogicExplanation from './LogicExplanation';
-import { Button } from '@/components/ui/button';
-import AnimatedKnight from './AnimatedKnight'; // Import the new AnimatedKnight component
+import GameInfoSidebar from './GameInfoSidebar'; // Import the new sidebar component
+import AnimatedKnight from './AnimatedKnight';
 
 interface BoardProps {
   boardSize: number;
@@ -152,8 +151,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu }) => {
     return () => {
       workerRef.current?.terminate();
     };
-  }, []); // Removed isHintLoading and isPossibleLoading from dependencies
-  // This ensures the worker is initialized only once on mount.
+  }, []);
 
   useEffect(() => {
     if (isTracingBack && tracebackIndex < pathHistory.length) {
@@ -304,7 +302,8 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu }) => {
   };
 
   return (
-    <div className="flex flex-col items-center p-4">
+    <div className="flex flex-col items-center p-4 relative"> {/* Added relative for absolute positioning of sidebar */}
+      <GameInfoSidebar /> {/* Placed the new sidebar component */}
       <h2 className="text-2xl font-bold mb-4">Knight's Tour</h2>
       <div className={`relative grid grid-cols-${boardSize} border border-gray-400 dark:border-gray-600`}>
         {board.map((rowArr, rowIndex) =>
@@ -342,11 +341,6 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu }) => {
         hintsRemaining={hintsRemaining}
         onReturnToMenu={onReturnToMenu}
       />
-      <div className="mt-4">
-        <LogicExplanation>
-          <Button variant="outline">Explain Logic</Button>
-        </LogicExplanation>
-      </div>
     </div>
   );
 };
