@@ -94,7 +94,7 @@ const solveKnightTour = (
 };
 
 /**
- * Checks if a Knight's Tour is possible from a given state.
+ * Checks if a Knight's Tour is possible from a given state by trying multiple times.
  * @param board The current state of the board.
  * @param currentRow The current row of the knight.
  * @param currentCol The current column of the knight.
@@ -106,17 +106,21 @@ const isTourPossible = (
   board: number[][],
   currentRow: number,
   currentCol: number,
-  initialVisitedCount: number, // Renamed for clarity
+  initialVisitedCount: number,
   boardSize: number
 ): boolean => {
-  // Create a deep copy of the board to avoid modifying the original game state
-  const tempBoard = board.map(row => [...row]);
-  // The current position is already marked as visited in the board passed from main thread
-  // and initialVisitedCount already includes it.
-  // So, we initialize the path with the current position and use initialVisitedCount as the starting moveCount.
-  const initialPath = [{ row: currentRow, col: currentCol }];
-  const result = solveKnightTour(tempBoard, currentRow, currentCol, initialVisitedCount, initialPath, boardSize);
-  return result !== null;
+  const MAX_ATTEMPTS = 5; // Number of times to try finding a tour
+
+  for (let i = 0; i < MAX_ATTEMPTS; i++) {
+    // Create a deep copy of the board for each attempt
+    const tempBoard = board.map(row => [...row]);
+    const initialPath = [{ row: currentRow, col: currentCol }];
+    const result = solveKnightTour(tempBoard, currentRow, currentCol, initialVisitedCount, initialPath, boardSize);
+    if (result) {
+      return true; // Found a tour in this attempt
+    }
+  }
+  return false; // No tour found after all attempts
 };
 
 /**
