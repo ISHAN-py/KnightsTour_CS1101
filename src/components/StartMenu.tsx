@@ -53,7 +53,7 @@ const StartMenu: React.FC<StartMenuProps> = ({ onStartGame }) => {
     <div className="relative min-h-screen w-full flex items-center justify-center p-4 bg-cover bg-center"
       style={{ backgroundImage: `url('/chess-knights-background.jpg')` }}>
       {/* Dark overlay */}
-      <div className="absolute inset-0 bg-black opacity-60"></div>
+      <div className="absolute inset-0 bg-black opacity-40"></div> {/* Changed opacity from 60 to 40 */}
 
       <div className="relative z-10 flex flex-col items-center justify-center w-full">
         {currentStep === 1 && (
