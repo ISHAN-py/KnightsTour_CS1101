@@ -4,7 +4,7 @@ import Controls from './Controls';
 import { showSuccess, showError } from '@/utils/toast';
 import KnightSolverWorker from '../workers/knightSolver?worker'; // Import the worker
 
-const BOARD_SIZE = 6; // Changed from 5 to 6
+const BOARD_SIZE = 6;
 
 const knightMoves = [
   [-2, -1], [-2, 1], [-1, -2], [-1, 2],
@@ -12,7 +12,7 @@ const knightMoves = [
 ];
 
 const Board: React.FC = () => {
-  const [board, setBoard] = useState<number[][]>([]); // 0: unvisited, 1: visited, 2: knight
+  const [board, setBoard] = useState<number[][]>([]); // 0: unvisited, 1: visited
   const [knightPos, setKnightPos] = useState<{ row: number; col: number } | null>(null);
   const [visitedCount, setVisitedCount] = useState(0);
   const [possibleMoves, setPossibleMoves] = useState<Set<string>>(new Set());
@@ -20,8 +20,13 @@ const Board: React.FC = () => {
   const [hintMove, setHintMove] = useState<{ row: number; col: number } | null>(null);
   const [isHintLoading, setIsHintLoading] = useState(false);
   const [isPossibleLoading, setIsPossibleLoading] = useState(false);
+  const [pathHistory, setPathHistory] = useState<{ row: number; col: number }[]>([]); // Stores the path
+  const [hintsRemaining, setHintsRemaining] = useState(10); // Max 10 hints
+  const [isTracingBack, setIsTracingBack] = useState(false);
+  const [tracebackIndex, setTracebackIndex] = useState(0);
 
   const workerRef = useRef<Worker | null>(null);
+  const tracebackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const initializeBoard = useCallback(() => {
     const newBoard: number[][] = Array(BOARD_SIZE).fill(0).map(() => Array(BOARD_SIZE).fill(0));
@@ -33,10 +38,19 @@ const Board: React.FC = () => {
     setBoard(newBoard);
     setKnightPos({ row: initialKnightRow, col: initialKnightCol });
     setVisitedCount(1);
+    setPossibleMoves(new Set()); // Clear possible moves
     setGameStatus(`Knight placed at (${initialKnightRow}, ${initialKnightCol}). Make your first move!`);
     setHintMove(null);
     setIsHintLoading(false);
     setIsPossibleLoading(false);
+    setPathHistory([{ row: initialKnightRow, col: initialKnightCol }]); // Initialize path history
+    setHintsRemaining(10); // Reset hints
+    setIsTracingBack(false);
+    setTracebackIndex(0);
+    if (tracebackTimeoutRef.current) {
+      clearTimeout(tracebackTimeoutRef.current);
+      tracebackTimeoutRef.current = null;
+    }
   }, []);
 
   useEffect(() => {
@@ -63,6 +77,7 @@ const Board: React.FC = () => {
             setHintMove(result);
             showSuccess(`Hint: Move to (${result.row}, ${result.col})`);
             setGameStatus(`Hint: Move to (${result.row}, ${result.col})`);
+            setHintsRemaining(prev => Math.max(0, prev - 1)); // Decrement hint count
           } else {
             showError("No hint available. It might be a dead end or no solution from here.");
             setGameStatus("No hint available.");
@@ -97,6 +112,26 @@ const Board: React.FC = () => {
     };
   }, []);
 
+  // Effect for traceback animation
+  useEffect(() => {
+    if (isTracingBack && tracebackIndex < pathHistory.length) {
+      tracebackTimeoutRef.current = setTimeout(() => {
+        setKnightPos(pathHistory[tracebackIndex]);
+        setTracebackIndex(prev => prev + 1);
+      }, 200); // Adjust speed of traceback here
+    } else if (isTracingBack && tracebackIndex >= pathHistory.length) {
+      setIsTracingBack(false);
+      setGameStatus("Congratulations! Tour traced back. Start a new game!");
+    }
+
+    return () => {
+      if (tracebackTimeoutRef.current) {
+        clearTimeout(tracebackTimeoutRef.current);
+      }
+    };
+  }, [isTracingBack, tracebackIndex, pathHistory]);
+
+
   const isValidMove = (row: number, col: number, currentBoard: number[][]) => {
     return row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE && currentBoard[row][col] === 0;
   };
@@ -115,16 +150,16 @@ const Board: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (knightPos) {
+    if (knightPos && !isTracingBack) { // Only calculate if not tracing back
       calculatePossibleMoves(knightPos.row, knightPos.col, board);
-    } else {
+    } else if (!knightPos && !isTracingBack) {
       setPossibleMoves(new Set());
     }
-  }, [knightPos, board, calculatePossibleMoves]);
+  }, [knightPos, board, calculatePossibleMoves, isTracingBack]);
 
   const handleSquareClick = (row: number, col: number) => {
-    if (gameStatus.includes("Game Over") || gameStatus.includes("Congratulations")) {
-      showError("Game is over. Start a new game!");
+    if (isTracingBack || gameStatus.includes("Game Over") || gameStatus.includes("Congratulations")) {
+      showError("Game is over or tracing back. Start a new game!");
       return;
     }
 
@@ -137,6 +172,7 @@ const Board: React.FC = () => {
         newBoard[row][col] = 1; // Mark new position as visited
         setBoard(newBoard);
         setKnightPos({ row, col });
+        setPathHistory(prev => [...prev, { row, col }]); // Add to path history
         const newVisitedCount = visitedCount + 1;
         setVisitedCount(newVisitedCount);
         setHintMove(null); // Clear hint after a move
@@ -144,8 +180,10 @@ const Board: React.FC = () => {
         const nextPossibleMoves = calculatePossibleMoves(row, col, newBoard);
 
         if (newVisitedCount === BOARD_SIZE * BOARD_SIZE) {
-          setGameStatus("Congratulations! You completed the Knight's Tour!");
+          setGameStatus("Congratulations! You completed the Knight's Tour! Tracing back...");
           showSuccess("Congratulations! You completed the Knight's Tour!");
+          setIsTracingBack(true); // Start traceback
+          setTracebackIndex(0); // Reset traceback index
         } else if (nextPossibleMoves.size === 0) {
           setGameStatus("Game Over! No more legal moves from this position.");
           showError("Game Over! No more legal moves from this position.");
@@ -163,8 +201,12 @@ const Board: React.FC = () => {
       showError("Place the knight first to get a hint.");
       return;
     }
-    if (isHintLoading || isPossibleLoading) {
-      showError("Please wait for the current calculation to finish.");
+    if (hintsRemaining <= 0) {
+      showError("No hints remaining!");
+      return;
+    }
+    if (isHintLoading || isPossibleLoading || isTracingBack) {
+      showError("Please wait for the current action to finish.");
       return;
     }
     setIsHintLoading(true);
@@ -182,8 +224,8 @@ const Board: React.FC = () => {
       showError("Place the knight first to check possibility.");
       return;
     }
-    if (isHintLoading || isPossibleLoading) {
-      showError("Please wait for the current calculation to finish.");
+    if (isHintLoading || isPossibleLoading || isTracingBack) {
+      showError("Please wait for the current action to finish.");
       return;
     }
     setIsPossibleLoading(true);
@@ -199,7 +241,7 @@ const Board: React.FC = () => {
   return (
     <div className="flex flex-col items-center p-4">
       <h2 className="text-2xl font-bold mb-4">Knight's Tour</h2>
-      <div className="grid grid-cols-6 border border-gray-400 dark:border-gray-600"> {/* Changed grid-cols-5 to grid-cols-6 */}
+      <div className="grid grid-cols-6 border border-gray-400 dark:border-gray-600">
         {board.map((rowArr, rowIndex) =>
           rowArr.map((_, colIndex) => (
             <Square
@@ -222,6 +264,7 @@ const Board: React.FC = () => {
         knightPlaced={knightPos !== null}
         isHintLoading={isHintLoading}
         isPossibleLoading={isPossibleLoading}
+        hintsRemaining={hintsRemaining} // Pass hints remaining
       />
     </div>
   );

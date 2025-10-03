@@ -10,6 +10,7 @@ interface ControlsProps {
   knightPlaced: boolean;
   isHintLoading: boolean;
   isPossibleLoading: boolean;
+  hintsRemaining: number; // New prop for hints remaining
 }
 
 const Controls: React.FC<ControlsProps> = ({
@@ -20,6 +21,7 @@ const Controls: React.FC<ControlsProps> = ({
   knightPlaced,
   isHintLoading,
   isPossibleLoading,
+  hintsRemaining, // Destructure new prop
 }) => {
   return (
     <div className="mt-6 flex flex-col items-center space-y-4">
@@ -32,8 +34,12 @@ const Controls: React.FC<ControlsProps> = ({
         <Button onClick={onNewGame} variant="default">
           New Game
         </Button>
-        <Button onClick={onHint} disabled={!knightPlaced || isHintLoading || isPossibleLoading} variant="secondary">
-          {isHintLoading ? "Calculating..." : "Hint"}
+        <Button
+          onClick={onHint}
+          disabled={!knightPlaced || isHintLoading || isPossibleLoading || hintsRemaining <= 0} // Disable if no hints left
+          variant="secondary"
+        >
+          {isHintLoading ? "Calculating..." : `Hint (${hintsRemaining})`} {/* Display hints remaining */}
         </Button>
         <Button onClick={onCheckPossible} disabled={!knightPlaced || isPossibleLoading || isHintLoading} variant="secondary">
           {isPossibleLoading ? "Checking..." : "Is this possible?"}
