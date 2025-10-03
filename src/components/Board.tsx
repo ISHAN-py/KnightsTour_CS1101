@@ -4,15 +4,16 @@ import Controls from './Controls';
 import GameProgress from './GameProgress';
 import { showSuccess, showError } from '@/utils/toast';
 import KnightSolverWorker from '../workers/knightSolver?worker';
-import GameInfoSidebar from './GameInfoSidebar'; // Import the new sidebar component
+import GameInfoSidebar from './GameInfoSidebar';
 import AnimatedKnight from './AnimatedKnight';
-import { cn } from '@/lib/utils'; // Import cn utility for conditional class names
+import { cn } from '@/lib/utils';
+import { VALID_STARTING_POINTS } from '@/utils/knightTourConfig'; // Import the config
 
 interface BoardProps {
   boardSize: number;
   onReturnToMenu: () => void;
-  initialHints: number; // New prop for initial hints
-  underglowColorClass: string; // New prop for underglow color class
+  initialHints: number;
+  underglowColorClass: string;
 }
 
 const knightMoves = [
@@ -21,16 +22,16 @@ const knightMoves = [
 ];
 
 const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, underglowColorClass }) => {
-  const [board, setBoard] = useState<number[][]>([]); // 0: unvisited, 1: visited
+  const [board, setBoard] = useState<number[][]>([]);
   const [knightPos, setKnightPos] = useState<{ row: number; col: number } | null>(null);
   const [visitedCount, setVisitedCount] = useState(0);
-  const [possibleMoves, setPossibleMoves] = useState<Set<string>>(new Set()); // FIX: Corrected useState declaration
+  const [possibleMoves, setPossibleMoves] = useState<Set<string>>(new Set());
   const [gameStatus, setGameStatus] = useState<string>("");
   const [hintMove, setHintMove] = useState<{ row: number; col: number } | null>(null);
   const [isHintLoading, setIsHintLoading] = useState(false);
   const [isPossibleLoading, setIsPossibleLoading] = useState(false);
   const [pathHistory, setPathHistory] = useState<{ row: number; col: number }[]>([]);
-  const [hintsRemaining, setHintsRemaining] = useState(initialHints); // Initialize with prop
+  const [hintsRemaining, setHintsRemaining] = useState(initialHints);
   const [isTracingBack, setIsTracingBack] = useState(false);
   const [tracebackIndex, setTracebackIndex] = useState(0);
 
@@ -46,8 +47,22 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
 
   const initializeBoard = useCallback(() => {
     const newBoard: number[][] = Array(boardSize).fill(0).map(() => Array(boardSize).fill(0));
-    const initialKnightRow = 0; // Starting position (0,0)
-    const initialKnightCol = 0;
+
+    // Get valid starting points for the current board size
+    const possibleStarts = VALID_STARTING_POINTS[boardSize];
+
+    let initialKnightRow = 0;
+    let initialKnightCol = 0;
+
+    if (possibleStarts && possibleStarts.length > 0) {
+      // Pick a random starting point from the pre-computed list
+      const randomIndex = Math.floor(Math.random() * possibleStarts.length);
+      initialKnightRow = possibleStarts[randomIndex].row;
+      initialKnightCol = possibleStarts[randomIndex].col;
+    } else {
+      console.error(`No valid starting points defined for board size ${boardSize}. Defaulting to (0,0).`);
+      // Fallback to (0,0) if no pre-computed points exist
+    }
 
     newBoard[initialKnightRow][initialKnightCol] = 1; // Mark as visited
 
@@ -70,11 +85,11 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
       clearTimeout(tracebackTimeoutRef.current);
       tracebackTimeoutRef.current = null;
     }
-  }, [boardSize, initialHints]); // Add initialHints to dependencies
+  }, [boardSize, initialHints]);
 
   useEffect(() => {
     initializeBoard();
-  }, [initializeBoard, boardSize, initialHints]); // Add initialHints to dependencies
+  }, [initializeBoard, boardSize, initialHints]);
 
   useEffect(() => {
     workerRef.current = new KnightSolverWorker();
@@ -305,8 +320,8 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
   };
 
   return (
-    <div className="flex flex-col items-center p-4 relative"> {/* Added relative for absolute positioning of sidebar */}
-      <GameInfoSidebar /> {/* Placed the new sidebar component */}
+    <div className="flex flex-col items-center p-4 relative">
+      <GameInfoSidebar />
       <h2 className="text-2xl font-bold mb-4">Knight's Tour</h2>
       <div className={cn(
         `relative grid grid-cols-${boardSize} border border-gray-400 dark:border-gray-600 transition-shadow duration-300 ease-in-out`,
