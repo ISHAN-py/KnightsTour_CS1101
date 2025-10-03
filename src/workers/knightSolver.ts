@@ -26,7 +26,7 @@ const countValidMoves = (r: number, c: number, boardSize: number, board: number[
  * @param board The current state of the board (0 for unvisited, 1 for visited).
  * @param currentRow The current row of the knight.
  * @param currentCol The current column of the knight.
- * @param moveCount The number of moves made so far.
+ * @param moveCount The number of moves made so far (length of the path).
  * @param path The current path of moves.
  * @param boardSize The size of the board.
  * @returns A path if a tour is found, otherwise null.
@@ -35,7 +35,7 @@ const solveKnightTour = (
   board: number[][],
   currentRow: number,
   currentCol: number,
-  moveCount: number,
+  moveCount: number, // This should be path.length
   path: { row: number; col: number }[],
   boardSize: number
 ): { row: number; col: number }[] | null => {
@@ -47,22 +47,28 @@ const solveKnightTour = (
   // Calculate possible next moves and their "degree" (number of subsequent moves)
   const possibleNextMoves: { row: number; col: number; degree: number }[] = [];
   for (const [dr, dc] of knightMoves) {
-    const nextRow = currentRow + dr;
-    const nextCol = currentCol + dc;
+    const nextR = currentRow + dr;
+    const nextC = currentCol + dc;
 
-    if (isValid(nextRow, nextCol, boardSize, board)) {
+    if (isValid(nextR, nextC, boardSize, board)) {
       // Temporarily mark the square as visited to calculate its degree
       // This is crucial for Warnsdorff's rule to work correctly
-      board[nextRow][nextCol] = 1;
-      const degree = countValidMoves(nextRow, nextCol, boardSize, board);
-      board[nextRow][nextCol] = 0; // Unmark it immediately
+      board[nextR][nextC] = 1;
+      const degree = countValidMoves(nextR, nextC, boardSize, board);
+      board[nextR][nextC] = 0; // Unmark it immediately
 
-      possibleNextMoves.push({ row: nextRow, col: nextCol, degree });
+      possibleNextMoves.push({ row: nextR, col: nextC, degree });
     }
   }
 
   // Sort moves by degree (Warnsdorff's Rule: prioritize moves with fewer subsequent options)
-  possibleNextMoves.sort((a, b) => a.degree - b.degree);
+  // Added a random tie-breaker to improve robustness
+  possibleNextMoves.sort((a, b) => {
+    if (a.degree === b.degree) {
+      return Math.random() - 0.5; // Randomize order if degrees are equal
+    }
+    return a.degree - b.degree;
+  });
 
   // Try moves in the sorted order
   for (const move of possibleNextMoves) {
@@ -92,7 +98,7 @@ const solveKnightTour = (
  * @param board The current state of the board.
  * @param currentRow The current row of the knight.
  * @param currentCol The current column of the knight.
- * @param moveCount The number of moves made so far.
+ * @param initialVisitedCount The number of moves made so far (including current position).
  * @param boardSize The size of the board.
  * @returns True if a tour is possible, false otherwise.
  */
@@ -100,14 +106,16 @@ const isTourPossible = (
   board: number[][],
   currentRow: number,
   currentCol: number,
-  moveCount: number,
+  initialVisitedCount: number, // Renamed for clarity
   boardSize: number
 ): boolean => {
   // Create a deep copy of the board to avoid modifying the original game state
   const tempBoard = board.map(row => [...row]);
-  tempBoard[currentRow][currentCol] = 1; // Mark current position as visited for the solver
-
-  const result = solveKnightTour(tempBoard, currentRow, currentCol, moveCount, [{ row: currentRow, col: currentCol }], boardSize);
+  // The current position is already marked as visited in the board passed from main thread
+  // and initialVisitedCount already includes it.
+  // So, we initialize the path with the current position and use initialVisitedCount as the starting moveCount.
+  const initialPath = [{ row: currentRow, col: currentCol }];
+  const result = solveKnightTour(tempBoard, currentRow, currentCol, initialVisitedCount, initialPath, boardSize);
   return result !== null;
 };
 
@@ -129,8 +137,8 @@ const getHint = (
 ): { row: number; col: number } | null => {
   // Create a deep copy of the board for the solver
   const tempBoard = board.map(row => [...row]);
-  tempBoard[currentRow][currentCol] = 1; // Mark current knight position as visited for the solver
-
+  // The current position is already marked as visited in the board passed from main thread
+  // and moveCount already includes it.
   const path = solveKnightTour(tempBoard, currentRow, currentCol, moveCount, [{ row: currentRow, col: currentCol }], boardSize);
   if (path && path.length > 1) {
     return path[1]; // Return the second element in the path (the first move from current position)
