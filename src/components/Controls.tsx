@@ -1,5 +1,6 @@
 import React from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button'; // Keep for Main Menu
+import { GlassButton } from './GlassButton'; // Import the new GlassButton
 import { RotateCcw, Lightbulb, HelpCircle, Home } from 'lucide-react'; // Import icons
 
 interface ControlsProps {
@@ -34,34 +35,31 @@ const Controls: React.FC<ControlsProps> = ({
           {gameStatus}
         </div>
       )}
-      <div className="flex flex-wrap justify-center gap-2 sm:space-x-4 w-full">
-        <Button
+      <div className="flex flex-wrap justify-center gap-4 w-full">
+        <GlassButton
           onClick={onNewGame}
-          variant="secondary" // Changed to secondary variant
-          className="flex-1 min-w-[120px] sm:min-w-0 rounded-full shadow-md hover:shadow-lg transition-all duration-200 ease-in-out"
+          className="px-6 py-2"
         >
           <RotateCcw className="mr-2 h-4 w-4" /> New Game
-        </Button>
-        <Button
+        </GlassButton>
+        <GlassButton
           onClick={onHint}
           disabled={!knightPlaced || isHintLoading || isPossibleLoading || hintsRemaining <= 0 || isGameOverState}
-          variant="secondary" // Changed to secondary variant
-          className="flex-1 min-w-[120px] sm:min-w-0 rounded-full shadow-md hover:shadow-lg transition-all duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-6 py-2"
         >
           {isHintLoading ? "Calculating..." : <><Lightbulb className="mr-2 h-4 w-4" /> Hint ({hintsRemaining})</>}
-        </Button>
-        <Button
+        </GlassButton>
+        <GlassButton
           onClick={onCheckPossible}
           disabled={!knightPlaced || isPossibleLoading || isHintLoading || isGameOverState}
-          variant="secondary" // Changed to secondary variant
-          className="flex-1 min-w-[120px] sm:min-w-0 rounded-full shadow-md hover:shadow-lg transition-all duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-6 py-2"
         >
           {isPossibleLoading ? "Checking..." : <><HelpCircle className="mr-2 h-4 w-4" /> Is possible?</>}
-        </Button>
+        </GlassButton>
         <Button
           onClick={onReturnToMenu}
           variant="outline"
-          className="flex-1 min-w-[120px] sm:min-w-0 rounded-full border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200 ease-in-out"
+          className="px-6 py-2 rounded-full border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200 ease-in-out"
         >
           <Home className="mr-2 h-4 w-4" /> Main Menu
         </Button>
