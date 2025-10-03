@@ -92,5 +92,9 @@ export default {
       },
     },
   },
+  safelist: [ // Added safelist to ensure dynamic grid classes are generated
+    'grid-cols-5',
+    'grid-cols-6',
+  ],
   plugins: [require("tailwindcss-animate")],
 } satisfies Config;
