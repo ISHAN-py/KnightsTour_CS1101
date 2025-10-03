@@ -37,24 +37,24 @@ const Controls: React.FC<ControlsProps> = ({
       <div className="flex flex-wrap justify-center gap-2 sm:space-x-4 w-full">
         <Button
           onClick={onNewGame}
-          variant="default"
-          className="flex-1 min-w-[120px] sm:min-w-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-md hover:shadow-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-200 ease-in-out"
+          variant="secondary" // Changed to secondary variant
+          className="flex-1 min-w-[120px] sm:min-w-0 rounded-full shadow-md hover:shadow-lg transition-all duration-200 ease-in-out"
         >
           <RotateCcw className="mr-2 h-4 w-4" /> New Game
         </Button>
         <Button
           onClick={onHint}
           disabled={!knightPlaced || isHintLoading || isPossibleLoading || hintsRemaining <= 0 || isGameOverState}
-          variant="secondary"
-          className="flex-1 min-w-[120px] sm:min-w-0 rounded-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white shadow-md hover:shadow-lg hover:from-yellow-600 hover:to-orange-600 transition-all duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
+          variant="secondary" // Changed to secondary variant
+          className="flex-1 min-w-[120px] sm:min-w-0 rounded-full shadow-md hover:shadow-lg transition-all duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isHintLoading ? "Calculating..." : <><Lightbulb className="mr-2 h-4 w-4" /> Hint ({hintsRemaining})</>}
         </Button>
         <Button
           onClick={onCheckPossible}
           disabled={!knightPlaced || isPossibleLoading || isHintLoading || isGameOverState}
-          variant="secondary"
-          className="flex-1 min-w-[120px] sm:min-w-0 rounded-full bg-gradient-to-r from-green-500 to-teal-600 text-white shadow-md hover:shadow-lg hover:from-green-600 hover:to-teal-700 transition-all duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
+          variant="secondary" // Changed to secondary variant
+          className="flex-1 min-w-[120px] sm:min-w-0 rounded-full shadow-md hover:shadow-lg transition-all duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isPossibleLoading ? "Checking..." : <><HelpCircle className="mr-2 h-4 w-4" /> Is possible?</>}
         </Button>
