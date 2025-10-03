@@ -52,7 +52,7 @@ const StartMenu: React.FC<StartMenuProps> = ({ onStartGame }) => {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4">
       {currentStep === 1 && (
-        <Card className="w-[350px] bg-background shadow-lg dark:shadow-xl rounded-lg p-6">
+        <Card className="w-full max-w-sm bg-background shadow-lg dark:shadow-xl rounded-lg p-6">
           <CardHeader>
             <CardTitle className="text-3xl font-bold text-center mb-2">Knight's Tour</CardTitle>
             <CardDescription className="text-center text-muted-foreground">Embark on a classic chess puzzle!</CardDescription>
@@ -66,7 +66,7 @@ const StartMenu: React.FC<StartMenuProps> = ({ onStartGame }) => {
       )}
 
       {currentStep === 2 && (
-        <Card className="w-[350px] bg-background shadow-lg dark:shadow-xl rounded-lg p-6">
+        <Card className="w-full max-w-sm bg-background shadow-lg dark:shadow-xl rounded-lg p-6">
           <CardHeader>
             <CardTitle className="text-2xl font-bold mb-2">Choose Board Size</CardTitle>
             <CardDescription className="text-muted-foreground">Select the challenge level.</CardDescription>
@@ -95,7 +95,7 @@ const StartMenu: React.FC<StartMenuProps> = ({ onStartGame }) => {
       )}
 
       {currentStep === 3 && (
-        <Card className="w-[350px] bg-background shadow-lg dark:shadow-xl rounded-lg p-6">
+        <Card className="w-full max-w-sm bg-background shadow-lg dark:shadow-xl rounded-lg p-6">
           <CardHeader>
             <CardTitle className="text-2xl font-bold mb-2">Choose Theme</CardTitle>
             <CardDescription className="text-muted-foreground">Personalize your experience.</CardDescription>

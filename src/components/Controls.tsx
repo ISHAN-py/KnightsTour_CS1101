@@ -34,7 +34,7 @@ const Controls: React.FC<ControlsProps> = ({
           {gameStatus}
         </div>
       )}
-      <div className="flex space-x-4">
+      <div className="flex flex-wrap justify-center gap-2 sm:space-x-4"> {/* Adjusted for responsiveness */}
         <Button onClick={onNewGame} variant="default">
           New Game
         </Button>
@@ -52,7 +52,7 @@ const Controls: React.FC<ControlsProps> = ({
         >
           {isPossibleLoading ? "Checking..." : "Is this possible?"}
         </Button>
-        <Button onClick={onReturnToMenu} variant="outline"> {/* New Main Menu button */}
+        <Button onClick={onReturnToMenu} variant="outline">
           Main Menu
         </Button>
       </div>

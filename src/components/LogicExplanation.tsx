@@ -21,7 +21,7 @@ const LogicExplanation: React.FC<LogicExplanationProps> = ({ children }) => {
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-full sm:max-w-3xl max-h-[90vh] overflow-y-auto"> {/* Adjusted max-w for responsiveness */}
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">Knight's Tour Solver Logic</DialogTitle>
           <DialogDescription>

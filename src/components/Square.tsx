@@ -25,7 +25,7 @@ const Square: React.FC<SquareProps> = ({
   return (
     <div
       className={cn(
-        "w-16 h-16 flex flex-col items-center justify-center text-sm font-medium relative", // Increased size to w-16 h-16, adjusted text-sm
+        "w-12 h-12 sm:w-16 sm:h-16 flex flex-col items-center justify-center text-sm font-medium relative", // Adjusted size for mobile, then sm:w-16 sm:h-16
         (row + col) % 2 === 0 ? "bg-gray-200 dark:bg-gray-700" : "bg-gray-100 dark:bg-gray-800",
         isVisited && "bg-blue-300 dark:bg-blue-600",
         isKnightHere && "bg-green-500 dark:bg-green-700 text-white",
@@ -35,10 +35,10 @@ const Square: React.FC<SquareProps> = ({
       )}
       onClick={handleClick}
     >
-      <span className="absolute top-0 left-0 p-0.5 text-[10px] text-gray-500 dark:text-gray-400"> {/* Adjusted font size */}
+      <span className="absolute top-0 left-0 p-0.5 text-[8px] sm:text-[10px] text-gray-500 dark:text-gray-400"> {/* Adjusted font size */}
         ({row},{col})
       </span>
-      {isKnightHere && <span className="text-3xl">♘</span>} {/* Increased knight icon size */}
+      {isKnightHere && <span className="text-xl sm:text-3xl">♘</span>} {/* Adjusted knight icon size */}
       {isVisited && !isKnightHere && (
         <span className="text-sm text-gray-700 dark:text-gray-300">
           {/* You can display move number here later if needed */}
