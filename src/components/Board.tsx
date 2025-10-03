@@ -140,7 +140,7 @@ const Board: React.FC<BoardProps> = ({ boardSize }) => {
     return () => {
       workerRef.current?.terminate();
     };
-  }, [isHintLoading, isPossibleLoading]); // Depend on loading states to ensure correct error handling context
+  }, []); // Removed isHintLoading, isPossibleLoading from dependencies
 
   // Effect for traceback animation
   useEffect(() => {
