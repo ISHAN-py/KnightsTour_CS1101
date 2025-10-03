@@ -152,7 +152,8 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu }) => {
     return () => {
       workerRef.current?.terminate();
     };
-  }, [isHintLoading, isPossibleLoading]);
+  }, []); // Removed isHintLoading and isPossibleLoading from dependencies
+  // This ensures the worker is initialized only once on mount.
 
   useEffect(() => {
     if (isTracingBack && tracebackIndex < pathHistory.length) {
