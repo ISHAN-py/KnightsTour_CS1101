@@ -155,7 +155,7 @@ const LogicExplanation: React.FC<LogicExplanationProps> = ({ children }) => {
   const { type, board, knightPos, visitedCount, boardSize } = event.data;
 
   if (!knightPos) {
-    self.postMessage({ type: \`\${type}_RESULT\`, result: null, error: "Knight not placed." });
+    self.postMessage({ type: \\\`\\\${type}_RESULT\\\`, result: null, error: "Knight not placed." });
     return;
   }
 
