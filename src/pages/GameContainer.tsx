@@ -26,12 +26,16 @@ const GameContainer: React.FC = () => {
     setGameStarted(true);
   };
 
+  const handleReturnToMenu = () => {
+    setGameStarted(false);
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
       {!gameStarted ? (
         <StartMenu onStartGame={handleStartGame} />
       ) : (
-        <Board boardSize={boardSize} />
+        <Board boardSize={boardSize} onReturnToMenu={handleReturnToMenu} />
       )}
       <MadeWithDyad />
     </div>

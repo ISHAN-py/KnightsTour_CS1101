@@ -6,6 +6,7 @@ import KnightSolverWorker from '../workers/knightSolver?worker'; // Import the w
 
 interface BoardProps {
   boardSize: number;
+  onReturnToMenu: () => void; // New prop
 }
 
 const knightMoves = [
@@ -13,7 +14,7 @@ const knightMoves = [
   [1, -2], [1, 2], [2, -1], [2, 1],
 ];
 
-const Board: React.FC<BoardProps> = ({ boardSize }) => {
+const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu }) => {
   const [board, setBoard] = useState<number[][]>([]); // 0: unvisited, 1: visited
   const [knightPos, setKnightPos] = useState<{ row: number; col: number } | null>(null);
   const [visitedCount, setVisitedCount] = useState(0);
@@ -299,6 +300,7 @@ const Board: React.FC<BoardProps> = ({ boardSize }) => {
         isHintLoading={isHintLoading}
         isPossibleLoading={isPossibleLoading}
         hintsRemaining={hintsRemaining} // Pass hints remaining
+        onReturnToMenu={onReturnToMenu} // Pass the new prop
       />
     </div>
   );

@@ -11,6 +11,7 @@ interface ControlsProps {
   isHintLoading: boolean;
   isPossibleLoading: boolean;
   hintsRemaining: number; // New prop for hints remaining
+  onReturnToMenu: () => void; // New prop for returning to main menu
 }
 
 const Controls: React.FC<ControlsProps> = ({
@@ -22,6 +23,7 @@ const Controls: React.FC<ControlsProps> = ({
   isHintLoading,
   isPossibleLoading,
   hintsRemaining, // Destructure new prop
+  onReturnToMenu, // Destructure new prop
 }) => {
   const isGameOverState = gameStatus.includes("No Knight's Tour possible") || gameStatus.includes("Game Over") || gameStatus.includes("Congratulations");
 
@@ -38,17 +40,20 @@ const Controls: React.FC<ControlsProps> = ({
         </Button>
         <Button
           onClick={onHint}
-          disabled={!knightPlaced || isHintLoading || isPossibleLoading || hintsRemaining <= 0 || isGameOverState} // Disable if no hints left or game over
+          disabled={!knightPlaced || isHintLoading || isPossibleLoading || hintsRemaining <= 0 || isGameOverState}
           variant="secondary"
         >
-          {isHintLoading ? "Calculating..." : `Hint (${hintsRemaining})`} {/* Display hints remaining */}
+          {isHintLoading ? "Calculating..." : `Hint (${hintsRemaining})`}
         </Button>
         <Button
           onClick={onCheckPossible}
-          disabled={!knightPlaced || isPossibleLoading || isHintLoading || isGameOverState} // Disable if game over
+          disabled={!knightPlaced || isPossibleLoading || isHintLoading || isGameOverState}
           variant="secondary"
         >
           {isPossibleLoading ? "Checking..." : "Is this possible?"}
+        </Button>
+        <Button onClick={onReturnToMenu} variant="outline"> {/* New Main Menu button */}
+          Main Menu
         </Button>
       </div>
     </div>
