@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Square from './Square';
 import Controls from './Controls';
+import GameProgress from './GameProgress'; // Import the new GameProgress component
 import { showSuccess, showError } from '@/utils/toast';
 import KnightSolverWorker from '../workers/knightSolver?worker'; // Import the worker
 import LogicExplanation from './LogicExplanation'; // Import the new component
-import { Button } from '@/components/ui/button'; // <--- ADDED THIS IMPORT
+import { Button } from '@/components/ui/button';
 
 interface BoardProps {
   boardSize: number;
@@ -20,7 +21,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu }) => {
   const [board, setBoard] = useState<number[][]>([]); // 0: unvisited, 1: visited
   const [knightPos, setKnightPos] = useState<{ row: number; col: number } | null>(null);
   const [visitedCount, setVisitedCount] = useState(0);
-  const [possibleMoves, setPossibleMoves] = useState<Set<string>>(new Set());
+  const [possibleMoves, setPossibleMoves] = new Set());
   const [gameStatus, setGameStatus] = useState<string>("");
   const [hintMove, setHintMove] = useState<{ row: number; col: number } | null>(null);
   const [isHintLoading, setIsHintLoading] = useState(false);
@@ -143,7 +144,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu }) => {
     return () => {
       workerRef.current?.terminate();
     };
-  }, []); // Removed isHintLoading, isPossibleLoading from dependencies
+  }, []);
 
   // Effect for traceback animation
   useEffect(() => {
@@ -180,7 +181,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu }) => {
     }
     setPossibleMoves(moves);
     return moves;
-  }, [boardSize]); // Depend on boardSize
+  }, [boardSize]);
 
   useEffect(() => {
     if (knightPos && !isTracingBack) { // Only calculate if not tracing back
@@ -293,6 +294,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu }) => {
           ))
         )}
       </div>
+      <GameProgress visitedCount={visitedCount} boardSize={boardSize} /> {/* New progress tracker */}
       <Controls
         onNewGame={initializeBoard}
         onHint={handleHint}
@@ -301,8 +303,8 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu }) => {
         knightPlaced={knightPos !== null}
         isHintLoading={isHintLoading}
         isPossibleLoading={isPossibleLoading}
-        hintsRemaining={hintsRemaining} // Pass hints remaining
-        onReturnToMenu={onReturnToMenu} // Pass the new prop
+        hintsRemaining={hintsRemaining}
+        onReturnToMenu={onReturnToMenu}
       />
       {/* Logic Explanation Dialog */}
       <div className="mt-4">
