@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface StartMenuProps {
-  onStartGame: (boardSize: number, theme: 'light' | 'dark', initialHints: number, underglowColorClass: string) => void;
+  onStartGame: (boardSize: number, theme: 'light' | 'dark', initialHints: number, underglowColorClass: string, difficulty: 'easy' | 'medium' | 'hard') => void;
 }
 
 const StartMenu: React.FC<StartMenuProps> = ({ onStartGame }) => {
@@ -75,7 +75,7 @@ const StartMenu: React.FC<StartMenuProps> = ({ onStartGame }) => {
     } else if (currentStep === 3 && selectedTheme !== null) {
       setCurrentStep(4);
     } else if (currentStep === 4 && selectedDifficulty !== null) {
-      onStartGame(selectedBoardSize!, selectedTheme!, getHintCount(selectedDifficulty!), selectedGlowColorClass);
+      onStartGame(selectedBoardSize!, selectedTheme!, getHintCount(selectedDifficulty!), selectedGlowColorClass, selectedDifficulty!);
     }
   };
 

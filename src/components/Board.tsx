@@ -8,12 +8,14 @@ import GameInfoSidebar from './GameInfoSidebar';
 import AnimatedKnight from './AnimatedKnight';
 import { cn } from '@/lib/utils';
 import { VALID_STARTING_POINTS } from '@/utils/knightTourConfig'; // Import the config
+import { supabase } from '@/integrations/supabase/client'; // Import Supabase client
 
 interface BoardProps {
   boardSize: number;
   onReturnToMenu: () => void;
   initialHints: number;
   underglowColorClass: string;
+  difficulty: 'easy' | 'medium' | 'hard'; // New prop for difficulty
 }
 
 const knightMoves = [
@@ -21,7 +23,7 @@ const knightMoves = [
   [1, -2], [1, 2], [2, -1], [2, 1],
 ];
 
-const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, underglowColorClass }) => {
+const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, underglowColorClass, difficulty }) => {
   const [board, setBoard] = useState<number[][]>([]);
   const [knightPos, setKnightPos] = useState<{ row: number; col: number } | null>(null);
   const [visitedCount, setVisitedCount] = useState(0);
@@ -32,6 +34,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
   const [isPossibleLoading, setIsPossibleLoading] = useState(false);
   const [pathHistory, setPathHistory] = useState<{ row: number; col: number }[]>([]);
   const [hintsRemaining, setHintsRemaining] = useState(initialHints);
+  const [isPossibleCheckCount, setIsPossibleCheckCount] = useState(0); // New state for penalty
   const [isTracingBack, setIsTracingBack] = useState(false);
   const [tracebackIndex, setTracebackIndex] = useState(0);
 
@@ -44,6 +47,48 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
   const tracebackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hintRequestStartTime = useRef<number>(0);
   const possibleRequestStartTime = useRef<number>(0);
+
+  const getDifficultyMultiplier = (diff: 'easy' | 'medium' | 'hard') => {
+    switch (diff) {
+      case 'easy': return 1.0;
+      case 'medium': return 1.2;
+      case 'hard': return 1.5;
+      default: return 1.0;
+    }
+  };
+
+  const calculateAndSubmitScore = useCallback(async (finalVisitedCount: number, finalHintsRemaining: number, gameOutcome: 'win' | 'lose') => {
+    const baseScore = (finalVisitedCount * 100) - (isPossibleCheckCount * 20) + (finalHintsRemaining * 10);
+    const multiplier = getDifficultyMultiplier(difficulty);
+    const finalScore = Math.max(0, Math.round(baseScore * multiplier)); // Score cannot be negative
+
+    showSuccess(`Final Score: ${finalScore} (Base: ${baseScore}, Multiplier: ${multiplier.toFixed(1)})`);
+
+    try {
+      const tableName = `high_scores_${boardSize}x${boardSize}`;
+      const { data, error } = await supabase
+        .from(tableName)
+        .insert([
+          {
+            player_name: 'Guest', // Can be extended to allow user input later
+            score: finalScore,
+            difficulty_multiplier: multiplier,
+            board_size: boardSize,
+          },
+        ]);
+
+      if (error) {
+        console.error('Error submitting high score:', error);
+        showError('Failed to submit high score.');
+      } else {
+        console.log('High score submitted:', data);
+        showSuccess('High score submitted successfully!');
+      }
+    } catch (err) {
+      console.error('Exception submitting high score:', err);
+      showError('An unexpected error occurred while submitting high score.');
+    }
+  }, [boardSize, difficulty, isPossibleCheckCount]);
 
   const initializeBoard = useCallback(() => {
     const newBoard: number[][] = Array(boardSize).fill(0).map(() => Array(boardSize).fill(0));
@@ -76,6 +121,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
     setIsPossibleLoading(false);
     setPathHistory([{ row: initialKnightRow, col: initialKnightCol }]);
     setHintsRemaining(initialHints); // Reset hints based on initialHints prop
+    setIsPossibleCheckCount(0); // Reset penalty count
     setIsTracingBack(false);
     setTracebackIndex(0);
     setAnimatingKnightFrom(null); // Reset animation states
@@ -89,7 +135,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
 
   useEffect(() => {
     initializeBoard();
-  }, [initializeBoard, boardSize, initialHints]);
+  }, [initializeBoard]);
 
   useEffect(() => {
     workerRef.current = new KnightSolverWorker();
@@ -169,7 +215,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
     return () => {
       workerRef.current?.terminate();
     };
-  }, []);
+  }, [isHintLoading, isPossibleLoading]); // Added dependencies to useEffect
 
   useEffect(() => {
     if (isTracingBack && tracebackIndex < pathHistory.length) {
@@ -232,11 +278,13 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
       if (newVisitedCount === boardSize * boardSize) {
         setGameStatus("Congratulations! You completed the Knight's Tour! Tracing back...");
         showSuccess("Congratulations! You completed the Knight's Tour!");
+        calculateAndSubmitScore(newVisitedCount, hintsRemaining, 'win');
         setIsTracingBack(true);
         setTracebackIndex(0);
       } else if (nextPossibleMoves.size === 0) {
         setGameStatus("Game Over! No more legal moves from this position.");
         showError("Game Over! No more legal moves from this position.");
+        calculateAndSubmitScore(newVisitedCount, hintsRemaining, 'lose');
       } else {
         setGameStatus(`Moves: ${newVisitedCount} / ${boardSize * boardSize}`);
       }
@@ -246,7 +294,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
       setAnimatingKnightTo(null);
       setIsAnimatingMove(false);
     }
-  }, [animatingKnightTo, board, boardSize, calculatePossibleMoves, visitedCount]);
+  }, [animatingKnightTo, board, boardSize, calculatePossibleMoves, visitedCount, hintsRemaining, calculateAndSubmitScore]);
 
 
   const handleSquareClick = (row: number, col: number) => {
@@ -309,6 +357,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
     }
     setIsPossibleLoading(true);
     setGameStatus("Checking if tour is possible...");
+    setIsPossibleCheckCount(prev => prev + 1); // Increment penalty count
     possibleRequestStartTime.current = Date.now();
     workerRef.current?.postMessage({
       type: 'CHECK_POSSIBLE',
