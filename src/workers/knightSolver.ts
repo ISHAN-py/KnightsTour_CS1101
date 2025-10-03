@@ -1,4 +1,4 @@
-const BOARD_SIZE = 5; // Changed from 8 to 5
+const BOARD_SIZE = 6; // Changed from 5 to 6
 const knightMoves = [
   [-2, -1], [-2, 1], [-1, -2], [-1, 2],
   [1, -2], [1, 2], [2, -1], [2, 1],

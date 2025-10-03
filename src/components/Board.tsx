@@ -4,7 +4,7 @@ import Controls from './Controls';
 import { showSuccess, showError } from '@/utils/toast';
 import KnightSolverWorker from '../workers/knightSolver?worker'; // Import the worker
 
-const BOARD_SIZE = 5; // Changed from 8 to 5
+const BOARD_SIZE = 6; // Changed from 5 to 6
 
 const knightMoves = [
   [-2, -1], [-2, 1], [-1, -2], [-1, 2],
@@ -25,11 +25,15 @@ const Board: React.FC = () => {
 
   const initializeBoard = useCallback(() => {
     const newBoard: number[][] = Array(BOARD_SIZE).fill(0).map(() => Array(BOARD_SIZE).fill(0));
+    const initialKnightRow = 0; // Starting position (0,0)
+    const initialKnightCol = 0;
+
+    newBoard[initialKnightRow][initialKnightCol] = 1; // Mark as visited
+
     setBoard(newBoard);
-    setKnightPos(null);
-    setVisitedCount(0);
-    setPossibleMoves(new Set());
-    setGameStatus("");
+    setKnightPos({ row: initialKnightRow, col: initialKnightCol });
+    setVisitedCount(1);
+    setGameStatus(`Knight placed at (${initialKnightRow}, ${initialKnightCol}). Make your first move!`);
     setHintMove(null);
     setIsHintLoading(false);
     setIsPossibleLoading(false);
@@ -124,17 +128,8 @@ const Board: React.FC = () => {
       return;
     }
 
-    if (!knightPos) {
-      // First click, place the knight
-      const newBoard = board.map(r => [...r]);
-      newBoard[row][col] = 1; // Mark as visited
-      setBoard(newBoard);
-      setKnightPos({ row, col });
-      setVisitedCount(1);
-      setGameStatus("Knight placed! Make your first move.");
-      setHintMove(null); // Clear hint when knight is placed
-    } else {
-      // Subsequent clicks, attempt to move the knight
+    // If knight is already placed, handle subsequent moves
+    if (knightPos) {
       const isMovePossible = possibleMoves.has(`${row},${col}`);
 
       if (isMovePossible) {
@@ -204,7 +199,7 @@ const Board: React.FC = () => {
   return (
     <div className="flex flex-col items-center p-4">
       <h2 className="text-2xl font-bold mb-4">Knight's Tour</h2>
-      <div className="grid grid-cols-5 border border-gray-400 dark:border-gray-600"> {/* Changed grid-cols-8 to grid-cols-5 */}
+      <div className="grid grid-cols-6 border border-gray-400 dark:border-gray-600"> {/* Changed grid-cols-5 to grid-cols-6 */}
         {board.map((rowArr, rowIndex) =>
           rowArr.map((_, colIndex) => (
             <Square
