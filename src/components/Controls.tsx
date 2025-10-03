@@ -10,7 +10,8 @@ interface ControlsProps {
   knightPlaced: boolean;
   isHintLoading: boolean;
   isPossibleLoading: boolean;
-  hintsRemaining: number; // New prop for hints remaining
+  hintsRemaining: number;
+  disableActions: boolean; // New prop to disable hint/possible buttons
 }
 
 const Controls: React.FC<ControlsProps> = ({
@@ -21,7 +22,8 @@ const Controls: React.FC<ControlsProps> = ({
   knightPlaced,
   isHintLoading,
   isPossibleLoading,
-  hintsRemaining, // Destructure new prop
+  hintsRemaining,
+  disableActions, // Destructure new prop
 }) => {
   return (
     <div className="mt-6 flex flex-col items-center space-y-4">
@@ -36,12 +38,16 @@ const Controls: React.FC<ControlsProps> = ({
         </Button>
         <Button
           onClick={onHint}
-          disabled={!knightPlaced || isHintLoading || isPossibleLoading || hintsRemaining <= 0} // Disable if no hints left
+          disabled={!knightPlaced || isHintLoading || isPossibleLoading || hintsRemaining <= 0 || disableActions} // Disable if disableActions is true
           variant="secondary"
         >
-          {isHintLoading ? "Calculating..." : `Hint (${hintsRemaining})`} {/* Display hints remaining */}
+          {isHintLoading ? "Calculating..." : `Hint (${hintsRemaining})`}
         </Button>
-        <Button onClick={onCheckPossible} disabled={!knightPlaced || isPossibleLoading || isHintLoading} variant="secondary">
+        <Button
+          onClick={onCheckPossible}
+          disabled={!knightPlaced || isPossibleLoading || isHintLoading || disableActions} // Disable if disableActions is true
+          variant="secondary"
+        >
           {isPossibleLoading ? "Checking..." : "Is this possible?"}
         </Button>
       </div>

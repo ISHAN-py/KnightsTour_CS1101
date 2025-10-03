@@ -17,7 +17,7 @@ const Board: React.FC<BoardProps> = ({ boardSize }) => {
   const [board, setBoard] = useState<number[][]>([]); // 0: unvisited, 1: visited
   const [knightPos, setKnightPos] = useState<{ row: number; col: number } | null>(null);
   const [visitedCount, setVisitedCount] = useState(0);
-  const [possibleMoves, setPossibleMoves] = useState<Set<string>>(new Set());
+  const [possibleMoves, setPossibleMoves] = new Set());
   const [gameStatus, setGameStatus] = useState<string>("");
   const [hintMove, setHintMove] = useState<{ row: number; col: number } | null>(null);
   const [isHintLoading, setIsHintLoading] = useState(false);
@@ -26,6 +26,7 @@ const Board: React.FC<BoardProps> = ({ boardSize }) => {
   const [hintsRemaining, setHintsRemaining] = useState(10); // Max 10 hints
   const [isTracingBack, setIsTracingBack] = useState(false);
   const [tracebackIndex, setTracebackIndex] = useState(0);
+  const [disableActionButtons, setDisableActionButtons] = useState(false); // New state for disabling actions
 
   const workerRef = useRef<Worker | null>(null);
   const tracebackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -51,6 +52,7 @@ const Board: React.FC<BoardProps> = ({ boardSize }) => {
     setHintsRemaining(10); // Reset hints
     setIsTracingBack(false);
     setTracebackIndex(0);
+    setDisableActionButtons(false); // Reset disable state
     if (tracebackTimeoutRef.current) {
       clearTimeout(tracebackTimeoutRef.current);
       tracebackTimeoutRef.current = null;
@@ -114,8 +116,9 @@ const Board: React.FC<BoardProps> = ({ boardSize }) => {
               showSuccess("Yes, a Knight's Tour is possible from this position!");
               setGameStatus("A Knight's Tour is possible!");
             } else {
-              showError("No, a Knight's Tour is NOT possible from this position.");
-              setGameStatus("A Knight's Tour is NOT possible.");
+              showError("No, a Knight's Tour is NOT possible from this position. Start a new game!");
+              setGameStatus("Game Over! No Knight's Tour possible. Start a new game!");
+              setDisableActionButtons(true); // Disable hint and possible buttons
             }
           });
           break;
@@ -140,7 +143,7 @@ const Board: React.FC<BoardProps> = ({ boardSize }) => {
     return () => {
       workerRef.current?.terminate();
     };
-  }, []); // Removed isHintLoading, isPossibleLoading from dependencies
+  }, []);
 
   // Effect for traceback animation
   useEffect(() => {
@@ -188,8 +191,8 @@ const Board: React.FC<BoardProps> = ({ boardSize }) => {
   }, [knightPos, board, calculatePossibleMoves, isTracingBack]);
 
   const handleSquareClick = (row: number, col: number) => {
-    if (isTracingBack || gameStatus.includes("Game Over") || gameStatus.includes("Congratulations")) {
-      showError("Game is over or tracing back. Start a new game!");
+    if (isTracingBack || gameStatus.includes("Game Over") || gameStatus.includes("Congratulations") || disableActionButtons) {
+      showError("Game is over or actions are disabled. Start a new game!");
       return;
     }
 
@@ -215,8 +218,9 @@ const Board: React.FC<BoardProps> = ({ boardSize }) => {
           setIsTracingBack(true); // Start traceback
           setTracebackIndex(0); // Reset traceback index
         } else if (nextPossibleMoves.size === 0) {
-          setGameStatus("Game Over! No more legal moves from this position.");
+          setGameStatus("Game Over! No more legal moves from this position. Start a new game!");
           showError("Game Over! No more legal moves from this position.");
+          setDisableActionButtons(true); // Disable hint and possible buttons
         } else {
           setGameStatus(`Moves: ${newVisitedCount} / ${boardSize * boardSize}`);
         }
@@ -235,8 +239,8 @@ const Board: React.FC<BoardProps> = ({ boardSize }) => {
       showError("No hints remaining!");
       return;
     }
-    if (isHintLoading || isPossibleLoading || isTracingBack) {
-      showError("Please wait for the current action to finish.");
+    if (isHintLoading || isPossibleLoading || isTracingBack || disableActionButtons) {
+      showError("Please wait for the current action to finish or start a new game.");
       return;
     }
     setIsHintLoading(true);
@@ -256,8 +260,8 @@ const Board: React.FC<BoardProps> = ({ boardSize }) => {
       showError("Place the knight first to check possibility.");
       return;
     }
-    if (isHintLoading || isPossibleLoading || isTracingBack) {
-      showError("Please wait for the current action to finish.");
+    if (isHintLoading || isPossibleLoading || isTracingBack || disableActionButtons) {
+      showError("Please wait for the current action to finish or start a new game.");
       return;
     }
     setIsPossibleLoading(true);
@@ -299,6 +303,7 @@ const Board: React.FC<BoardProps> = ({ boardSize }) => {
         isHintLoading={isHintLoading}
         isPossibleLoading={isPossibleLoading}
         hintsRemaining={hintsRemaining} // Pass hints remaining
+        disableActions={disableActionButtons} // Pass new disable state
       />
     </div>
   );
