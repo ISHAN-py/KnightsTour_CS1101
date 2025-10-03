@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import Board from '@/components/Board';
 import StartMenu from '@/components/StartMenu';
-import { MadeWithDyad } from '@/components/made-with-dyad';
 import { useTheme } from 'next-themes';
 
 const GameContainer: React.FC = () => {
@@ -37,7 +36,6 @@ const GameContainer: React.FC = () => {
       ) : (
         <Board boardSize={boardSize} onReturnToMenu={handleReturnToMenu} />
       )}
-      <MadeWithDyad />
     </div>
   );
 };
