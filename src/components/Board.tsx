@@ -4,6 +4,7 @@ import Controls from './Controls';
 import { showSuccess, showError } from '@/utils/toast';
 import KnightSolverWorker from '../workers/knightSolver?worker'; // Import the worker
 import LogicExplanation from './LogicExplanation'; // Import the new component
+import { Button } from '@/components/ui/button'; // <--- ADDED THIS IMPORT
 
 interface BoardProps {
   boardSize: number;
