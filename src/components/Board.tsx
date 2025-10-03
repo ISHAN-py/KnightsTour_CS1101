@@ -21,7 +21,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu }) => {
   const [board, setBoard] = useState<number[][]>([]); // 0: unvisited, 1: visited
   const [knightPos, setKnightPos] = useState<{ row: number; col: number } | null>(null);
   const [visitedCount, setVisitedCount] = useState(0);
-  const [possibleMoves, setPossibleMoves] = new Set());
+  const [possibleMoves, setPossibleMoves] = useState<Set<string>>(new Set()); // Corrected this line
   const [gameStatus, setGameStatus] = useState<string>("");
   const [hintMove, setHintMove] = useState<{ row: number; col: number } | null>(null);
   const [isHintLoading, setIsHintLoading] = useState(false);
