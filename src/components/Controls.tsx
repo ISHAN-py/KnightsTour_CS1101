@@ -8,6 +8,8 @@ interface ControlsProps {
   onCheckPossible: () => void;
   gameStatus: string;
   knightPlaced: boolean;
+  isHintLoading: boolean;
+  isPossibleLoading: boolean;
 }
 
 const Controls: React.FC<ControlsProps> = ({
@@ -16,6 +18,8 @@ const Controls: React.FC<ControlsProps> = ({
   onCheckPossible,
   gameStatus,
   knightPlaced,
+  isHintLoading,
+  isPossibleLoading,
 }) => {
   return (
     <div className="mt-6 flex flex-col items-center space-y-4">
@@ -28,11 +32,11 @@ const Controls: React.FC<ControlsProps> = ({
         <Button onClick={onNewGame} variant="default">
           New Game
         </Button>
-        <Button onClick={onHint} disabled={!knightPlaced} variant="secondary">
-          Hint
+        <Button onClick={onHint} disabled={!knightPlaced || isHintLoading || isPossibleLoading} variant="secondary">
+          {isHintLoading ? "Calculating..." : "Hint"}
         </Button>
-        <Button onClick={onCheckPossible} disabled={!knightPlaced} variant="secondary">
-          Is this possible?
+        <Button onClick={onCheckPossible} disabled={!knightPlaced || isPossibleLoading || isHintLoading} variant="secondary">
+          {isPossibleLoading ? "Checking..." : "Is this possible?"}
         </Button>
       </div>
     </div>

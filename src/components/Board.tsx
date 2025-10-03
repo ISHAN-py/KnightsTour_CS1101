@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Square from './Square';
-import Controls from './Controls'; // Import Controls component
+import Controls from './Controls';
 import { showSuccess, showError } from '@/utils/toast';
-import { solveKnightTour, isTourPossible, getHint } from '@/utils/solver'; // Import solver functions
+import KnightSolverWorker from '../workers/knightSolver?worker'; // Import the worker
 
 const BOARD_SIZE = 8;
 
@@ -18,6 +18,10 @@ const Board: React.FC = () => {
   const [possibleMoves, setPossibleMoves] = useState<Set<string>>(new Set());
   const [gameStatus, setGameStatus] = useState<string>("");
   const [hintMove, setHintMove] = useState<{ row: number; col: number } | null>(null);
+  const [isHintLoading, setIsHintLoading] = useState(false);
+  const [isPossibleLoading, setIsPossibleLoading] = useState(false);
+
+  const workerRef = useRef<Worker | null>(null);
 
   const initializeBoard = useCallback(() => {
     const newBoard: number[][] = Array(BOARD_SIZE).fill(0).map(() => Array(BOARD_SIZE).fill(0));
@@ -27,11 +31,67 @@ const Board: React.FC = () => {
     setPossibleMoves(new Set());
     setGameStatus("");
     setHintMove(null);
+    setIsHintLoading(false);
+    setIsPossibleLoading(false);
   }, []);
 
   useEffect(() => {
     initializeBoard();
   }, [initializeBoard]);
+
+  useEffect(() => {
+    workerRef.current = new KnightSolverWorker();
+
+    workerRef.current.onmessage = (event: MessageEvent) => {
+      const { type, result, error } = event.data;
+
+      if (error) {
+        showError(error);
+        setGameStatus(error);
+        setIsHintLoading(false);
+        setIsPossibleLoading(false);
+        return;
+      }
+
+      switch (type) {
+        case 'GET_HINT_RESULT':
+          if (result) {
+            setHintMove(result);
+            showSuccess(`Hint: Move to (${result.row}, ${result.col})`);
+            setGameStatus(`Hint: Move to (${result.row}, ${result.col})`);
+          } else {
+            showError("No hint available. It might be a dead end or no solution from here.");
+            setGameStatus("No hint available.");
+          }
+          setIsHintLoading(false);
+          break;
+        case 'CHECK_POSSIBLE_RESULT':
+          if (result) {
+            showSuccess("Yes, a Knight's Tour is possible from this position!");
+            setGameStatus("A Knight's Tour is possible!");
+          } else {
+            showError("No, a Knight's Tour is NOT possible from this position.");
+            setGameStatus("A Knight's Tour is NOT possible.");
+          }
+          setIsPossibleLoading(false);
+          break;
+        default:
+          console.warn('Unknown message type from worker:', type);
+      }
+    };
+
+    workerRef.current.onerror = (error) => {
+      console.error("Worker error:", error);
+      showError("An error occurred during calculation.");
+      setGameStatus("Error during calculation.");
+      setIsHintLoading(false);
+      setIsPossibleLoading(false);
+    };
+
+    return () => {
+      workerRef.current?.terminate();
+    };
+  }, []);
 
   const isValidMove = (row: number, col: number, currentBoard: number[][]) => {
     return row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE && currentBoard[row][col] === 0;
@@ -108,20 +168,18 @@ const Board: React.FC = () => {
       showError("Place the knight first to get a hint.");
       return;
     }
-    setGameStatus("Calculating hint...");
-    // Create a deep copy of the board for the solver
-    const tempBoard = board.map(r => [...r]);
-    tempBoard[knightPos.row][knightPos.col] = 1; // Mark current knight position as visited for solver
-
-    const hint = getHint(tempBoard, knightPos.row, knightPos.col, visitedCount);
-    if (hint) {
-      setHintMove(hint);
-      showSuccess(`Hint: Move to (${hint.row}, ${hint.col})`);
-      setGameStatus(`Hint: Move to (${hint.row}, ${hint.col})`);
-    } else {
-      showError("No hint available. It might be a dead end or no solution from here.");
-      setGameStatus("No hint available.");
+    if (isHintLoading || isPossibleLoading) {
+      showError("Please wait for the current calculation to finish.");
+      return;
     }
+    setIsHintLoading(true);
+    setGameStatus("Calculating hint...");
+    workerRef.current?.postMessage({
+      type: 'GET_HINT',
+      board: board.map(r => [...r]), // Deep copy for worker
+      knightPos,
+      visitedCount,
+    });
   };
 
   const handleCheckPossible = () => {
@@ -129,19 +187,18 @@ const Board: React.FC = () => {
       showError("Place the knight first to check possibility.");
       return;
     }
-    setGameStatus("Checking if tour is possible...");
-    // Create a deep copy of the board for the solver
-    const tempBoard = board.map(r => [...r]);
-    tempBoard[knightPos.row][knightPos.col] = 1; // Mark current knight position as visited for solver
-
-    const possible = isTourPossible(tempBoard, knightPos.row, knightPos.col, visitedCount);
-    if (possible) {
-      showSuccess("Yes, a Knight's Tour is possible from this position!");
-      setGameStatus("A Knight's Tour is possible!");
-    } else {
-      showError("No, a Knight's Tour is NOT possible from this position.");
-      setGameStatus("A Knight's Tour is NOT possible.");
+    if (isHintLoading || isPossibleLoading) {
+      showError("Please wait for the current calculation to finish.");
+      return;
     }
+    setIsPossibleLoading(true);
+    setGameStatus("Checking if tour is possible...");
+    workerRef.current?.postMessage({
+      type: 'CHECK_POSSIBLE',
+      board: board.map(r => [...r]), // Deep copy for worker
+      knightPos,
+      visitedCount,
+    });
   };
 
   return (
@@ -168,6 +225,8 @@ const Board: React.FC = () => {
         onCheckPossible={handleCheckPossible}
         gameStatus={gameStatus}
         knightPlaced={knightPos !== null}
+        isHintLoading={isHintLoading}
+        isPossibleLoading={isPossibleLoading}
       />
     </div>
   );
