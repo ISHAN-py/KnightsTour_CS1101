@@ -85,14 +85,29 @@ export default {
             height: "0",
           },
         },
+        "neon-pulse": {
+          "0%, 100%": {
+            "box-shadow": "0 0 5px hsl(var(--neon-color)), 0 0 10px hsl(var(--neon-color)), 0 0 15px hsl(var(--neon-color))",
+          },
+          "50%": {
+            "box-shadow": "0 0 10px hsl(var(--neon-color)), 0 0 20px hsl(var(--neon-color)), 0 0 30px hsl(var(--neon-color))",
+          },
+        },
+        "knight-jump": {
+          "0%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-20px)" }, // Arc upwards
+          "100%": { transform: "translateY(0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "neon-pulse": "neon-pulse 1.5s ease-in-out infinite",
+        "knight-jump": "knight-jump 0.5s ease-in-out",
       },
     },
   },
-  safelist: [ // Added safelist to ensure dynamic grid classes are generated
+  safelist: [
     'grid-cols-5',
     'grid-cols-6',
   ],

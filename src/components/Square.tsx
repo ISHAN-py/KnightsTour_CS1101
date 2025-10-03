@@ -8,6 +8,7 @@ interface SquareProps {
   isKnightHere: boolean;
   isPossibleMove: boolean;
   onClick: (row: number, col: number) => void;
+  hintMove: { row: number; col: number } | null; // New prop for hint glow
 }
 
 const Square: React.FC<SquareProps> = ({
@@ -17,10 +18,13 @@ const Square: React.FC<SquareProps> = ({
   isKnightHere,
   isPossibleMove,
   onClick,
+  hintMove,
 }) => {
   const handleClick = () => {
     onClick(row, col);
   };
+
+  const isHintSquare = hintMove?.row === row && hintMove?.col === col;
 
   return (
     <div
@@ -30,6 +34,7 @@ const Square: React.FC<SquareProps> = ({
         isVisited && "bg-blue-300 dark:bg-blue-600",
         isKnightHere && "bg-green-500 dark:bg-green-700 text-white",
         isPossibleMove && "bg-yellow-300 dark:bg-yellow-500 cursor-pointer hover:bg-yellow-400 dark:hover:bg-yellow-600",
+        isPossibleMove && isHintSquare && "animate-neon-pulse relative", // Apply neon glow to hint square
         !isKnightHere && !isVisited && !isPossibleMove && "cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-600",
         "transition-colors duration-150 ease-in-out"
       )}

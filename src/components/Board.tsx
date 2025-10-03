@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Square from './Square';
 import Controls from './Controls';
-import GameProgress from './GameProgress'; // Import the new GameProgress component
+import GameProgress from './GameProgress';
 import { showSuccess, showError } from '@/utils/toast';
-import KnightSolverWorker from '../workers/knightSolver?worker'; // Import the worker
-import LogicExplanation from './LogicExplanation'; // Import the new component
+import KnightSolverWorker from '../workers/knightSolver?worker';
+import LogicExplanation from './LogicExplanation';
 import { Button } from '@/components/ui/button';
+import AnimatedKnight from './AnimatedKnight'; // Import the new AnimatedKnight component
 
 interface BoardProps {
   boardSize: number;
-  onReturnToMenu: () => void; // New prop
+  onReturnToMenu: () => void;
 }
 
 const knightMoves = [
@@ -21,15 +22,20 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu }) => {
   const [board, setBoard] = useState<number[][]>([]); // 0: unvisited, 1: visited
   const [knightPos, setKnightPos] = useState<{ row: number; col: number } | null>(null);
   const [visitedCount, setVisitedCount] = useState(0);
-  const [possibleMoves, setPossibleMoves] = useState<Set<string>>(new Set()); // Corrected this line
+  const [possibleMoves, setPossibleMoves] = useState<Set<string>>(new Set());
   const [gameStatus, setGameStatus] = useState<string>("");
   const [hintMove, setHintMove] = useState<{ row: number; col: number } | null>(null);
   const [isHintLoading, setIsHintLoading] = useState(false);
   const [isPossibleLoading, setIsPossibleLoading] = useState(false);
-  const [pathHistory, setPathHistory] = useState<{ row: number; col: number }[]>([]); // Stores the path
-  const [hintsRemaining, setHintsRemaining] = useState(10); // Max 10 hints
+  const [pathHistory, setPathHistory] = useState<{ row: number; col: number }[]>([]);
+  const [hintsRemaining, setHintsRemaining] = useState(10);
   const [isTracingBack, setIsTracingBack] = useState(false);
   const [tracebackIndex, setTracebackIndex] = useState(0);
+
+  // Animation states
+  const [animatingKnightFrom, setAnimatingKnightFrom] = useState<{ row: number; col: number } | null>(null);
+  const [animatingKnightTo, setAnimatingKnightTo] = useState<{ row: number; col: number } | null>(null);
+  const [isAnimatingMove, setIsAnimatingMove] = useState(false);
 
   const workerRef = useRef<Worker | null>(null);
   const tracebackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -46,24 +52,27 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu }) => {
     setBoard(newBoard);
     setKnightPos({ row: initialKnightRow, col: initialKnightCol });
     setVisitedCount(1);
-    setPossibleMoves(new Set()); // Clear possible moves
+    setPossibleMoves(new Set());
     setGameStatus(`Knight placed at (${initialKnightRow}, ${initialKnightCol}). Make your first move!`);
     setHintMove(null);
     setIsHintLoading(false);
     setIsPossibleLoading(false);
-    setPathHistory([{ row: initialKnightRow, col: initialKnightCol }]); // Initialize path history
-    setHintsRemaining(10); // Reset hints
+    setPathHistory([{ row: initialKnightRow, col: initialKnightCol }]);
+    setHintsRemaining(10);
     setIsTracingBack(false);
     setTracebackIndex(0);
+    setAnimatingKnightFrom(null); // Reset animation states
+    setAnimatingKnightTo(null);
+    setIsAnimatingMove(false);
     if (tracebackTimeoutRef.current) {
       clearTimeout(tracebackTimeoutRef.current);
       tracebackTimeoutRef.current = null;
     }
-  }, [boardSize]); // Depend on boardSize
+  }, [boardSize]);
 
   useEffect(() => {
     initializeBoard();
-  }, [initializeBoard, boardSize]); // Re-initialize if boardSize changes
+  }, [initializeBoard, boardSize]);
 
   useEffect(() => {
     workerRef.current = new KnightSolverWorker();
@@ -105,7 +114,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu }) => {
               setHintMove(result);
               showSuccess(`Hint: Move to (${result.row}, ${result.col})`);
               setGameStatus(`Hint: Move to (${result.row}, ${result.col})`);
-              setHintsRemaining(prev => Math.max(0, prev - 1)); // Decrement hint count
+              setHintsRemaining(prev => Math.max(0, prev - 1));
             } else {
               showError("No hint available. It might be a dead end or no solution from here.");
               setGameStatus("No hint available.");
@@ -119,7 +128,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu }) => {
               setGameStatus("A Knight's Tour is possible!");
             } else {
               showError("No, a Knight's Tour is NOT possible from this position.");
-              setGameStatus("No Knight's Tour possible from here. Please start a new game."); // Updated status
+              setGameStatus("No Knight's Tour possible from here. Please start a new game.");
             }
           });
           break;
@@ -130,7 +139,6 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu }) => {
 
     workerRef.current.onerror = (error) => {
       console.error("Worker error:", error);
-      // This error handler might not have the 'type' info, so we'll assume it's for the currently active loading state
       if (isHintLoading) {
         setIsHintLoading(false);
       }
@@ -144,15 +152,14 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu }) => {
     return () => {
       workerRef.current?.terminate();
     };
-  }, []);
+  }, [isHintLoading, isPossibleLoading]);
 
-  // Effect for traceback animation
   useEffect(() => {
     if (isTracingBack && tracebackIndex < pathHistory.length) {
       tracebackTimeoutRef.current = setTimeout(() => {
         setKnightPos(pathHistory[tracebackIndex]);
         setTracebackIndex(prev => prev + 1);
-      }, 200); // Adjust speed of traceback here
+      }, 200);
     } else if (isTracingBack && tracebackIndex >= pathHistory.length) {
       setIsTracingBack(false);
       setGameStatus("Congratulations! Tour traced back. Start a new game!");
@@ -184,46 +191,65 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu }) => {
   }, [boardSize]);
 
   useEffect(() => {
-    if (knightPos && !isTracingBack) { // Only calculate if not tracing back
+    if (knightPos && !isTracingBack && !isAnimatingMove) {
       calculatePossibleMoves(knightPos.row, knightPos.col, board);
-    } else if (!knightPos && !isTracingBack) {
+    } else if (!knightPos && !isTracingBack && !isAnimatingMove) {
       setPossibleMoves(new Set());
     }
-  }, [knightPos, board, calculatePossibleMoves, isTracingBack]);
+  }, [knightPos, board, calculatePossibleMoves, isTracingBack, isAnimatingMove]);
+
+  const handleAnimationEnd = useCallback(() => {
+    if (animatingKnightTo) {
+      const newBoard = board.map(r => [...r]);
+      newBoard[animatingKnightTo.row][animatingKnightTo.col] = 1; // Mark new position as visited
+
+      setBoard(newBoard);
+      setKnightPos(animatingKnightTo); // Set knight to final position after animation
+      setPathHistory(prev => [...prev, animatingKnightTo]);
+      const newVisitedCount = visitedCount + 1;
+      setVisitedCount(newVisitedCount);
+      setHintMove(null);
+
+      const nextPossibleMoves = calculatePossibleMoves(animatingKnightTo.row, animatingKnightTo.col, newBoard);
+
+      if (newVisitedCount === boardSize * boardSize) {
+        setGameStatus("Congratulations! You completed the Knight's Tour! Tracing back...");
+        showSuccess("Congratulations! You completed the Knight's Tour!");
+        setIsTracingBack(true);
+        setTracebackIndex(0);
+      } else if (nextPossibleMoves.size === 0) {
+        setGameStatus("Game Over! No more legal moves from this position.");
+        showError("Game Over! No more legal moves from this position.");
+      } else {
+        setGameStatus(`Moves: ${newVisitedCount} / ${boardSize * boardSize}`);
+      }
+
+      // Reset animation states
+      setAnimatingKnightFrom(null);
+      setAnimatingKnightTo(null);
+      setIsAnimatingMove(false);
+    }
+  }, [animatingKnightTo, board, boardSize, calculatePossibleMoves, visitedCount]);
+
 
   const handleSquareClick = (row: number, col: number) => {
-    if (isTracingBack || gameStatus.includes("Game Over") || gameStatus.includes("Congratulations") || gameStatus.includes("No Knight's Tour possible")) {
-      showError("Game is over or tracing back. Start a new game!");
+    if (isTracingBack || gameStatus.includes("Game Over") || gameStatus.includes("Congratulations") || gameStatus.includes("No Knight's Tour possible") || isAnimatingMove) {
+      showError("Game is over, tracing back, or animating. Start a new game or wait!");
       return;
     }
 
-    // If knight is already placed, handle subsequent moves
     if (knightPos) {
       const isMovePossible = possibleMoves.has(`${row},${col}`);
 
       if (isMovePossible) {
-        const newBoard = board.map(r => [...r]);
-        newBoard[row][col] = 1; // Mark new position as visited
-        setBoard(newBoard);
-        setKnightPos({ row, col });
-        setPathHistory(prev => [...prev, { row, col }]); // Add to path history
-        const newVisitedCount = visitedCount + 1;
-        setVisitedCount(newVisitedCount);
-        setHintMove(null); // Clear hint after a move
+        // Trigger animation
+        setAnimatingKnightFrom(knightPos);
+        setAnimatingKnightTo({ row, col });
+        setIsAnimatingMove(true);
+        setKnightPos(null); // Temporarily hide static knight
 
-        const nextPossibleMoves = calculatePossibleMoves(row, col, newBoard);
-
-        if (newVisitedCount === boardSize * boardSize) {
-          setGameStatus("Congratulations! You completed the Knight's Tour! Tracing back...");
-          showSuccess("Congratulations! You completed the Knight's Tour!");
-          setIsTracingBack(true); // Start traceback
-          setTracebackIndex(0); // Reset traceback index
-        } else if (nextPossibleMoves.size === 0) {
-          setGameStatus("Game Over! No more legal moves from this position.");
-          showError("Game Over! No more legal moves from this position.");
-        } else {
-          setGameStatus(`Moves: ${newVisitedCount} / ${boardSize * boardSize}`);
-        }
+        // The actual board state update and game logic will happen after animation ends
+        // via the onAnimationEnd callback passed to AnimatedKnight.
       } else {
         showError("Invalid move. Knights move in L-shapes and cannot land on visited squares.");
       }
@@ -239,19 +265,19 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu }) => {
       showError("No hints remaining!");
       return;
     }
-    if (isHintLoading || isPossibleLoading || isTracingBack || gameStatus.includes("No Knight's Tour possible")) {
+    if (isHintLoading || isPossibleLoading || isTracingBack || gameStatus.includes("No Knight's Tour possible") || isAnimatingMove) {
       showError("Please wait for the current action to finish or start a new game.");
       return;
     }
     setIsHintLoading(true);
     setGameStatus("Calculating hint...");
-    hintRequestStartTime.current = Date.now(); // Record start time
+    hintRequestStartTime.current = Date.now();
     workerRef.current?.postMessage({
       type: 'GET_HINT',
-      board: board.map(r => [...r]), // Deep copy for worker
+      board: board.map(r => [...r]),
       knightPos,
       visitedCount,
-      boardSize, // Pass boardSize to worker
+      boardSize,
     });
   };
 
@@ -260,26 +286,26 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu }) => {
       showError("Place the knight first to check possibility.");
       return;
     }
-    if (isHintLoading || isPossibleLoading || isTracingBack || gameStatus.includes("No Knight's Tour possible")) {
+    if (isHintLoading || isPossibleLoading || isTracingBack || gameStatus.includes("No Knight's Tour possible") || isAnimatingMove) {
       showError("Please wait for the current action to finish or start a new game.");
       return;
     }
     setIsPossibleLoading(true);
     setGameStatus("Checking if tour is possible...");
-    possibleRequestStartTime.current = Date.now(); // Record start time
+    possibleRequestStartTime.current = Date.now();
     workerRef.current?.postMessage({
       type: 'CHECK_POSSIBLE',
-      board: board.map(r => [...r]), // Deep copy for worker
+      board: board.map(r => [...r]),
       knightPos,
       visitedCount,
-      boardSize, // Pass boardSize to worker
+      boardSize,
     });
   };
 
   return (
     <div className="flex flex-col items-center p-4">
       <h2 className="text-2xl font-bold mb-4">Knight's Tour</h2>
-      <div className={`grid grid-cols-${boardSize} border border-gray-400 dark:border-gray-600`}> {/* Dynamic grid-cols */}
+      <div className={`relative grid grid-cols-${boardSize} border border-gray-400 dark:border-gray-600`}>
         {board.map((rowArr, rowIndex) =>
           rowArr.map((_, colIndex) => (
             <Square
@@ -288,13 +314,22 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu }) => {
               col={colIndex}
               isVisited={board[rowIndex][colIndex] === 1}
               isKnightHere={knightPos?.row === rowIndex && knightPos?.col === colIndex}
-              isPossibleMove={possibleMoves.has(`${rowIndex},${colIndex}`) || (hintMove?.row === rowIndex && hintMove?.col === colIndex)}
+              isPossibleMove={possibleMoves.has(`${rowIndex},${colIndex}`)}
               onClick={handleSquareClick}
+              hintMove={hintMove}
             />
           ))
         )}
+        {isAnimatingMove && animatingKnightFrom && animatingKnightTo && (
+          <AnimatedKnight
+            from={animatingKnightFrom}
+            to={animatingKnightTo}
+            boardSize={boardSize}
+            onAnimationEnd={handleAnimationEnd}
+          />
+        )}
       </div>
-      <GameProgress visitedCount={visitedCount} boardSize={boardSize} /> {/* New progress tracker */}
+      <GameProgress visitedCount={visitedCount} boardSize={boardSize} />
       <Controls
         onNewGame={initializeBoard}
         onHint={handleHint}
@@ -306,7 +341,6 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu }) => {
         hintsRemaining={hintsRemaining}
         onReturnToMenu={onReturnToMenu}
       />
-      {/* Logic Explanation Dialog */}
       <div className="mt-4">
         <LogicExplanation>
           <Button variant="outline">Explain Logic</Button>
