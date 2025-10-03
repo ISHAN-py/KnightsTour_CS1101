@@ -10,6 +10,7 @@ const GameContainer: React.FC = () => {
   const [boardSize, setBoardSize] = useState(6); // Default to 6x6
   const { theme, setTheme } = useTheme();
   const [selectedTheme, setSelectedTheme] = useState<'light' | 'dark'>(theme === 'dark' ? 'dark' : 'light');
+  const [initialHints, setInitialHints] = useState(3); // Default to medium hints
 
   useEffect(() => {
     // Ensure the theme from next-themes is reflected in local state
@@ -18,10 +19,11 @@ const GameContainer: React.FC = () => {
     }
   }, [theme]);
 
-  const handleStartGame = (size: number, chosenTheme: 'light' | 'dark') => {
+  const handleStartGame = (size: number, chosenTheme: 'light' | 'dark', hints: number) => {
     setBoardSize(size);
     setSelectedTheme(chosenTheme);
     setTheme(chosenTheme); // Apply theme if not already set by StartMenu
+    setInitialHints(hints);
     setGameStarted(true);
   };
 
@@ -34,7 +36,7 @@ const GameContainer: React.FC = () => {
       {!gameStarted ? (
         <StartMenu onStartGame={handleStartGame} />
       ) : (
-        <Board boardSize={boardSize} onReturnToMenu={handleReturnToMenu} />
+        <Board boardSize={boardSize} onReturnToMenu={handleReturnToMenu} initialHints={initialHints} />
       )}
     </div>
   );

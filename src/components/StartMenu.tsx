@@ -8,14 +8,15 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface StartMenuProps {
-  onStartGame: (boardSize: number, theme: 'light' | 'dark') => void;
+  onStartGame: (boardSize: number, theme: 'light' | 'dark', initialHints: number) => void;
 }
 
 const StartMenu: React.FC<StartMenuProps> = ({ onStartGame }) => {
-  const [currentStep, setCurrentStep] = useState(1); // 1: Start, 2: Board Size, 3: Theme
+  const [currentStep, setCurrentStep] = useState(1); // 1: Start, 2: Board Size, 3: Theme, 4: Difficulty
   const [selectedBoardSize, setSelectedBoardSize] = useState<number | null>(null);
   const { theme, setTheme } = useTheme();
   const [selectedTheme, setSelectedTheme] = useState<'light' | 'dark' | null>(null);
+  const [selectedDifficulty, setSelectedDifficulty] = useState<'easy' | 'medium' | 'hard' | null>(null);
 
   // Initialize selectedTheme based on current theme from next-themes on mount
   useEffect(() => {
@@ -37,11 +38,30 @@ const StartMenu: React.FC<StartMenuProps> = ({ onStartGame }) => {
     setTheme(value); // Apply theme immediately
   };
 
+  const handleDifficultyChange = (value: 'easy' | 'medium' | 'hard') => {
+    setSelectedDifficulty(value);
+  };
+
+  const getHintCount = (difficulty: 'easy' | 'medium' | 'hard') => {
+    switch (difficulty) {
+      case 'easy':
+        return 5;
+      case 'medium':
+        return 3;
+      case 'hard':
+        return 1;
+      default:
+        return 3; // Default to medium if somehow not set
+    }
+  };
+
   const handleNextStep = () => {
     if (currentStep === 2 && selectedBoardSize !== null) {
       setCurrentStep(3);
     } else if (currentStep === 3 && selectedTheme !== null) {
-      onStartGame(selectedBoardSize!, selectedTheme!);
+      setCurrentStep(4);
+    } else if (currentStep === 4 && selectedDifficulty !== null) {
+      onStartGame(selectedBoardSize!, selectedTheme!, getHintCount(selectedDifficulty!));
     }
   };
 
@@ -51,7 +71,7 @@ const StartMenu: React.FC<StartMenuProps> = ({ onStartGame }) => {
 
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center p-4 bg-cover bg-center"
-      style={{ backgroundImage: `url('/background.jpg')` }}> {/* Updated image path here */}
+      style={{ backgroundImage: `url('/background.jpg')` }}>
       {/* Dark overlay */}
       <div className="absolute inset-0 bg-black opacity-40"></div>
 
@@ -123,7 +143,40 @@ const StartMenu: React.FC<StartMenuProps> = ({ onStartGame }) => {
             </CardContent>
             <CardFooter className="flex justify-between mt-6">
               <Button onClick={handleBackStep} variant="outline" className="py-2 px-4">Back</Button>
-              <Button onClick={handleNextStep} disabled={selectedTheme === null} className="py-2 px-4">Play!</Button>
+              <Button onClick={handleNextStep} disabled={selectedTheme === null} className="py-2 px-4">Next</Button>
+            </CardFooter>
+          </Card>
+        )}
+
+        {currentStep === 4 && (
+          <Card className="w-full max-w-sm bg-background/80 dark:bg-background/90 shadow-lg dark:shadow-xl rounded-lg p-6">
+            <CardHeader>
+              <CardTitle className="text-2xl font-bold mb-2">Choose Difficulty</CardTitle>
+              <CardDescription className="text-muted-foreground">How many hints do you want?</CardDescription>
+            </CardHeader>
+            <CardContent className="mt-4">
+              <RadioGroup
+                value={selectedDifficulty || ""}
+                onValueChange={handleDifficultyChange}
+                className="flex flex-col space-y-3"
+              >
+                <div className="flex items-center space-x-3 p-2 border rounded-md hover:bg-accent/50 transition-colors">
+                  <RadioGroupItem value="easy" id="d1" />
+                  <Label htmlFor="d1" className="text-base cursor-pointer">Easy (5 Hints)</Label>
+                </div>
+                <div className="flex items-center space-x-3 p-2 border rounded-md hover:bg-accent/50 transition-colors">
+                  <RadioGroupItem value="medium" id="d2" />
+                  <Label htmlFor="d2" className="text-base cursor-pointer">Medium (3 Hints)</Label>
+                </div>
+                <div className="flex items-center space-x-3 p-2 border rounded-md hover:bg-accent/50 transition-colors">
+                  <RadioGroupItem value="hard" id="d3" />
+                  <Label htmlFor="d3" className="text-base cursor-pointer">Hard (1 Hint)</Label>
+                </div>
+              </RadioGroup>
+            </CardContent>
+            <CardFooter className="flex justify-between mt-6">
+              <Button onClick={handleBackStep} variant="outline" className="py-2 px-4">Back</Button>
+              <Button onClick={handleNextStep} disabled={selectedDifficulty === null} className="py-2 px-4">Play!</Button>
             </CardFooter>
           </Card>
         )}

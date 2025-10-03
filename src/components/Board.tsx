@@ -10,6 +10,7 @@ import AnimatedKnight from './AnimatedKnight';
 interface BoardProps {
   boardSize: number;
   onReturnToMenu: () => void;
+  initialHints: number; // New prop for initial hints
 }
 
 const knightMoves = [
@@ -17,17 +18,17 @@ const knightMoves = [
   [1, -2], [1, 2], [2, -1], [2, 1],
 ];
 
-const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu }) => {
+const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints }) => {
   const [board, setBoard] = useState<number[][]>([]); // 0: unvisited, 1: visited
   const [knightPos, setKnightPos] = useState<{ row: number; col: number } | null>(null);
   const [visitedCount, setVisitedCount] = useState(0);
-  const [possibleMoves, setPossibleMoves] = useState<Set<string>>(new Set());
+  const [possibleMoves, setPossibleMoves] = new Set<string>();
   const [gameStatus, setGameStatus] = useState<string>("");
   const [hintMove, setHintMove] = useState<{ row: number; col: number } | null>(null);
   const [isHintLoading, setIsHintLoading] = useState(false);
   const [isPossibleLoading, setIsPossibleLoading] = useState(false);
   const [pathHistory, setPathHistory] = useState<{ row: number; col: number }[]>([]);
-  const [hintsRemaining, setHintsRemaining] = useState(10);
+  const [hintsRemaining, setHintsRemaining] = useState(initialHints); // Initialize with prop
   const [isTracingBack, setIsTracingBack] = useState(false);
   const [tracebackIndex, setTracebackIndex] = useState(0);
 
@@ -57,7 +58,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu }) => {
     setIsHintLoading(false);
     setIsPossibleLoading(false);
     setPathHistory([{ row: initialKnightRow, col: initialKnightCol }]);
-    setHintsRemaining(10);
+    setHintsRemaining(initialHints); // Reset hints based on initialHints prop
     setIsTracingBack(false);
     setTracebackIndex(0);
     setAnimatingKnightFrom(null); // Reset animation states
@@ -67,11 +68,11 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu }) => {
       clearTimeout(tracebackTimeoutRef.current);
       tracebackTimeoutRef.current = null;
     }
-  }, [boardSize]);
+  }, [boardSize, initialHints]); // Add initialHints to dependencies
 
   useEffect(() => {
     initializeBoard();
-  }, [initializeBoard, boardSize]);
+  }, [initializeBoard, boardSize, initialHints]); // Add initialHints to dependencies
 
   useEffect(() => {
     workerRef.current = new KnightSolverWorker();
