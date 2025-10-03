@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface StartMenuProps {
-  onStartGame: (boardSize: number, theme: 'light' | 'dark', initialHints: number) => void;
+  onStartGame: (boardSize: number, theme: 'light' | 'dark', initialHints: number, underglowColorClass: string) => void;
 }
 
 const StartMenu: React.FC<StartMenuProps> = ({ onStartGame }) => {
@@ -17,6 +17,7 @@ const StartMenu: React.FC<StartMenuProps> = ({ onStartGame }) => {
   const { theme, setTheme } = useTheme();
   const [selectedTheme, setSelectedTheme] = useState<'light' | 'dark' | null>(null);
   const [selectedDifficulty, setSelectedDifficulty] = useState<'easy' | 'medium' | 'hard' | null>(null);
+  const [selectedGlowColorClass, setSelectedGlowColorClass] = useState<string>('');
 
   // Initialize selectedTheme based on current theme from next-themes on mount
   useEffect(() => {
@@ -40,6 +41,19 @@ const StartMenu: React.FC<StartMenuProps> = ({ onStartGame }) => {
 
   const handleDifficultyChange = (value: 'easy' | 'medium' | 'hard') => {
     setSelectedDifficulty(value);
+    switch (value) {
+      case 'easy':
+        setSelectedGlowColorClass('board-glow-white');
+        break;
+      case 'medium':
+        setSelectedGlowColorClass('board-glow-yellow');
+        break;
+      case 'hard':
+        setSelectedGlowColorClass('board-glow-red');
+        break;
+      default:
+        setSelectedGlowColorClass('');
+    }
   };
 
   const getHintCount = (difficulty: 'easy' | 'medium' | 'hard') => {
@@ -61,7 +75,7 @@ const StartMenu: React.FC<StartMenuProps> = ({ onStartGame }) => {
     } else if (currentStep === 3 && selectedTheme !== null) {
       setCurrentStep(4);
     } else if (currentStep === 4 && selectedDifficulty !== null) {
-      onStartGame(selectedBoardSize!, selectedTheme!, getHintCount(selectedDifficulty!));
+      onStartGame(selectedBoardSize!, selectedTheme!, getHintCount(selectedDifficulty!), selectedGlowColorClass);
     }
   };
 

@@ -6,11 +6,13 @@ import { showSuccess, showError } from '@/utils/toast';
 import KnightSolverWorker from '../workers/knightSolver?worker';
 import GameInfoSidebar from './GameInfoSidebar'; // Import the new sidebar component
 import AnimatedKnight from './AnimatedKnight';
+import { cn } from '@/lib/utils'; // Import cn utility for conditional class names
 
 interface BoardProps {
   boardSize: number;
   onReturnToMenu: () => void;
   initialHints: number; // New prop for initial hints
+  underglowColorClass: string; // New prop for underglow color class
 }
 
 const knightMoves = [
@@ -18,7 +20,7 @@ const knightMoves = [
   [1, -2], [1, 2], [2, -1], [2, 1],
 ];
 
-const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints }) => {
+const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, underglowColorClass }) => {
   const [board, setBoard] = useState<number[][]>([]); // 0: unvisited, 1: visited
   const [knightPos, setKnightPos] = useState<{ row: number; col: number } | null>(null);
   const [visitedCount, setVisitedCount] = useState(0);
@@ -306,7 +308,10 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints }
     <div className="flex flex-col items-center p-4 relative"> {/* Added relative for absolute positioning of sidebar */}
       <GameInfoSidebar /> {/* Placed the new sidebar component */}
       <h2 className="text-2xl font-bold mb-4">Knight's Tour</h2>
-      <div className={`relative grid grid-cols-${boardSize} border border-gray-400 dark:border-gray-600`}>
+      <div className={cn(
+        `relative grid grid-cols-${boardSize} border border-gray-400 dark:border-gray-600 transition-shadow duration-300 ease-in-out`,
+        underglowColorClass
+      )}>
         {board.map((rowArr, rowIndex) =>
           rowArr.map((_, colIndex) => (
             <Square

@@ -50,6 +50,11 @@
 
     --sidebar-ring: 217.2 91.2% 59.8%;
     --neon-color: 217.2 91.2% 59.8%; /* Using sidebar-ring color for neon glow */
+
+    /* New glow colors for difficulty */
+    --glow-red: 0 84.2% 60.2%; /* Using destructive color for red glow */
+    --glow-yellow: 48 96% 50%; /* A vibrant yellow */
+    --glow-white: 0 0% 98%; /* Light foreground color for white glow */
   }
 
   .dark {
@@ -89,6 +94,11 @@
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
     --neon-color: 217.2 91.2% 59.8%; /* Using sidebar-ring color for neon glow */
+
+    /* New glow colors for difficulty in dark mode */
+    --glow-red: 0 62.8% 30.6%; /* Using destructive color for red glow */
+    --glow-yellow: 48 96% 50%; /* A vibrant yellow */
+    --glow-white: 210 40% 98%; /* Dark foreground color for white glow */
   }
 }
 
@@ -100,4 +110,17 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Custom classes for board underglow */
+.board-glow-red {
+  box-shadow: 0 0 15px hsl(var(--glow-red)), 0 0 30px hsl(var(--glow-red));
+}
+
+.board-glow-yellow {
+  box-shadow: 0 0 15px hsl(var(--glow-yellow)), 0 0 30px hsl(var(--glow-yellow));
+}
+
+.board-glow-white {
+  box-shadow: 0 0 15px hsl(var(--glow-white)), 0 0 30px hsl(var(--glow-white));
 }

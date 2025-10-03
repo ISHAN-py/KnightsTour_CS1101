@@ -11,6 +11,7 @@ const GameContainer: React.FC = () => {
   const { theme, setTheme } = useTheme();
   const [selectedTheme, setSelectedTheme] = useState<'light' | 'dark'>(theme === 'dark' ? 'dark' : 'light');
   const [initialHints, setInitialHints] = useState(3); // Default to medium hints
+  const [underglowColorClass, setUnderglowColorClass] = useState<string>(''); // New state for underglow color
 
   useEffect(() => {
     // Ensure the theme from next-themes is reflected in local state
@@ -19,11 +20,12 @@ const GameContainer: React.FC = () => {
     }
   }, [theme]);
 
-  const handleStartGame = (size: number, chosenTheme: 'light' | 'dark', hints: number) => {
+  const handleStartGame = (size: number, chosenTheme: 'light' | 'dark', hints: number, glowClass: string) => {
     setBoardSize(size);
     setSelectedTheme(chosenTheme);
     setTheme(chosenTheme); // Apply theme if not already set by StartMenu
     setInitialHints(hints);
+    setUnderglowColorClass(glowClass); // Set the underglow color class
     setGameStarted(true);
   };
 
@@ -36,7 +38,7 @@ const GameContainer: React.FC = () => {
       {!gameStarted ? (
         <StartMenu onStartGame={handleStartGame} />
       ) : (
-        <Board boardSize={boardSize} onReturnToMenu={handleReturnToMenu} initialHints={initialHints} />
+        <Board boardSize={boardSize} onReturnToMenu={handleReturnToMenu} initialHints={initialHints} underglowColorClass={underglowColorClass} />
       )}
     </div>
   );
