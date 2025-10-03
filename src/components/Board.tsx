@@ -3,6 +3,7 @@ import Square from './Square';
 import Controls from './Controls';
 import { showSuccess, showError } from '@/utils/toast';
 import KnightSolverWorker from '../workers/knightSolver?worker'; // Import the worker
+import LogicExplanation from './LogicExplanation'; // Import the new component
 
 interface BoardProps {
   boardSize: number;
@@ -302,6 +303,12 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu }) => {
         hintsRemaining={hintsRemaining} // Pass hints remaining
         onReturnToMenu={onReturnToMenu} // Pass the new prop
       />
+      {/* Logic Explanation Dialog */}
+      <div className="mt-4">
+        <LogicExplanation>
+          <Button variant="outline">Explain Logic</Button>
+        </LogicExplanation>
+      </div>
     </div>
   );
 };
