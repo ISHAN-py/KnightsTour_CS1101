@@ -10,7 +10,7 @@ const glassButtonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-white/20 border border-white/30 text-gray-900 shadow-md hover:bg-white/30 [backdrop-filter:blur(5px)]", // Glassmorphism styling
+        default: "bg-white/20 border border-white/30 text-foreground shadow-md hover:bg-white/30 dark:bg-white/10 dark:border-white/20 dark:hover:bg-white/20 [backdrop-filter:blur(5px)]", // Glassmorphism styling with improved text color and dark mode
       },
       size: {
         default: "h-10 px-4 py-2",

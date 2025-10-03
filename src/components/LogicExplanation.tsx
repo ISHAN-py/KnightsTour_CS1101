@@ -21,31 +21,31 @@ const LogicExplanation: React.FC<LogicExplanationProps> = ({ children }) => {
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="max-w-full sm:max-w-3xl max-h-[90vh] overflow-y-auto"> {/* Adjusted max-w for responsiveness */}
+      <DialogContent className="max-w-full sm:max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">Knight's Tour Solver Logic</DialogTitle>
           <DialogDescription>
             An in-depth look at the algorithms and techniques used to solve the Knight's Tour puzzle.
           </DialogDescription>
         </DialogHeader>
-        <div className="prose dark:prose-invert max-w-none text-sm">
-          <h3 className="text-lg font-semibold mt-4">1. The Knight's Tour Problem</h3>
-          <p>
+        <div className="prose dark:prose-invert max-w-none"> {/* Removed text-sm */}
+          <h3 className="text-xl font-semibold mt-6 mb-3">1. The Knight's Tour Problem</h3>
+          <p className="mb-3">
             The Knight's Tour is a classic chess problem where a knight must visit every square on a chessboard exactly once.
             Finding a solution, especially for larger boards, requires a systematic approach. Our solver uses a combination of
             backtracking and an optimization called Warnsdorff's Rule.
           </p>
 
-          <h3 className="text-lg font-semibold mt-4">2. Backtracking Algorithm</h3>
-          <p>
+          <h3 className="text-xl font-semibold mt-6 mb-3">2. Backtracking Algorithm</h3>
+          <p className="mb-3">
             Backtracking is a general algorithmic technique for solving problems recursively by trying to build a solution
             incrementally. If a partial solution cannot be completed into a valid solution, it "backtracks" to an earlier
             state and tries a different path.
           </p>
-          <p>
+          <p className="mb-3">
             In the Knight's Tour, this means:
           </p>
-          <ol className="list-decimal list-inside ml-4">
+          <ol className="list-decimal list-inside ml-4 mb-3">
             <li>Start at a given square.</li>
             <li>Mark the current square as visited.</li>
             <li>For each possible next move:
@@ -60,24 +60,24 @@ const LogicExplanation: React.FC<LogicExplanationProps> = ({ children }) => {
             <li>If no valid moves lead to a solution from the current square, return failure.</li>
           </ol>
 
-          <h4 className="text-md font-semibold mt-3">Warnsdorff's Rule Optimization</h4>
-          <p>
+          <h4 className="text-lg font-semibold mt-4 mb-2">Warnsdorff's Rule Optimization</h4>
+          <p className="mb-3">
             Pure backtracking can be very slow. Warnsdorff's Rule is a heuristic that significantly speeds up the search.
             It states that at each step, the knight should move to the square from which it has the fewest onward moves.
             This strategy helps to avoid creating dead ends too early in the tour.
           </p>
-          <p>
+          <p className="mb-3">
             Our `solveKnightTour` function implements this by:
           </p>
-          <ul className="list-disc list-inside ml-4">
+          <ul className="list-disc list-inside ml-4 mb-3">
             <li>Calculating all valid next moves.</li>
             <li>For each valid next move, temporarily "visiting" it and counting how many valid moves are possible *from that next square* (its "degree").</li>
             <li>Sorting the possible moves by their degree in ascending order.</li>
             <li>Trying the moves in this sorted order.</li>
           </ul>
 
-          <h4 className="text-md font-semibold mt-3">Code Snippet: `solveKnightTour` (simplified)</h4>
-          <pre className="bg-gray-100 dark:bg-gray-800 p-3 rounded-md overflow-x-auto text-xs">
+          <h4 className="text-lg font-semibold mt-4 mb-2">Code Snippet: `solveKnightTour` (simplified)</h4>
+          <pre className="bg-gray-100 dark:bg-gray-800 p-3 rounded-md overflow-x-auto text-sm mb-3"> {/* Changed text-xs to text-sm */}
             <code>
 {`const solveKnightTour = (board, r, c, moveCount, path, boardSize) => {
   if (moveCount === boardSize * boardSize) {
@@ -114,20 +114,20 @@ const LogicExplanation: React.FC<LogicExplanationProps> = ({ children }) => {
             </code>
           </pre>
 
-          <h3 className="text-lg font-semibold mt-4">3. Web Worker Logic</h3>
-          <p>
+          <h3 className="text-xl font-semibold mt-6 mb-3">3. Web Worker Logic</h3>
+          <p className="mb-3">
             The Knight's Tour solver, especially for larger boards, can be computationally intensive. If this logic were run
             directly on the main thread (where the UI renders), it would cause the application to freeze and become
             unresponsive until the calculation is complete.
           </p>
-          <p>
+          <p className="mb-3">
             To prevent this, we offload the heavy computation to a <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Web Worker</a>.
             A Web Worker runs scripts in a background thread, separate from the main execution thread of the web page.
           </p>
-          <p>
+          <p className="mb-3">
             Here's how it works in our application:
           </p>
-          <ul className="list-disc list-inside ml-4">
+          <ul className="list-disc list-inside ml-4 mb-3">
             <li>
               The main React component (`Board.tsx`) creates an instance of `KnightSolverWorker`.
               This worker script (`src/workers/knightSolver.ts`) contains the `solveKnightTour` logic.
@@ -148,8 +148,8 @@ const LogicExplanation: React.FC<LogicExplanationProps> = ({ children }) => {
             </li>
           </ul>
 
-          <h4 className="text-md font-semibold mt-3">Code Snippet: `knightSolver.ts` (Worker's `onmessage`)</h4>
-          <pre className="bg-gray-100 dark:bg-gray-800 p-3 rounded-md overflow-x-auto text-xs">
+          <h4 className="text-lg font-semibold mt-4 mb-2">Code Snippet: `knightSolver.ts` (Worker's `onmessage`)</h4>
+          <pre className="bg-gray-100 dark:bg-gray-800 p-3 rounded-md overflow-x-auto text-sm mb-3"> {/* Changed text-xs to text-sm */}
             <code>
 {`self.onmessage = (event) => {
   const { type, board, knightPos, visitedCount, boardSize } = event.data;
