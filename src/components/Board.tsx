@@ -115,7 +115,7 @@ const Board: React.FC<BoardProps> = ({ boardSize }) => {
               setGameStatus("A Knight's Tour is possible!");
             } else {
               showError("No, a Knight's Tour is NOT possible from this position.");
-              setGameStatus("A Knight's Tour is NOT possible.");
+              setGameStatus("No Knight's Tour possible from here. Please start a new game."); // Updated status
             }
           });
           break;
@@ -188,7 +188,7 @@ const Board: React.FC<BoardProps> = ({ boardSize }) => {
   }, [knightPos, board, calculatePossibleMoves, isTracingBack]);
 
   const handleSquareClick = (row: number, col: number) => {
-    if (isTracingBack || gameStatus.includes("Game Over") || gameStatus.includes("Congratulations")) {
+    if (isTracingBack || gameStatus.includes("Game Over") || gameStatus.includes("Congratulations") || gameStatus.includes("No Knight's Tour possible")) {
       showError("Game is over or tracing back. Start a new game!");
       return;
     }
@@ -235,8 +235,8 @@ const Board: React.FC<BoardProps> = ({ boardSize }) => {
       showError("No hints remaining!");
       return;
     }
-    if (isHintLoading || isPossibleLoading || isTracingBack) {
-      showError("Please wait for the current action to finish.");
+    if (isHintLoading || isPossibleLoading || isTracingBack || gameStatus.includes("No Knight's Tour possible")) {
+      showError("Please wait for the current action to finish or start a new game.");
       return;
     }
     setIsHintLoading(true);
@@ -256,8 +256,8 @@ const Board: React.FC<BoardProps> = ({ boardSize }) => {
       showError("Place the knight first to check possibility.");
       return;
     }
-    if (isHintLoading || isPossibleLoading || isTracingBack) {
-      showError("Please wait for the current action to finish.");
+    if (isHintLoading || isPossibleLoading || isTracingBack || gameStatus.includes("No Knight's Tour possible")) {
+      showError("Please wait for the current action to finish or start a new game.");
       return;
     }
     setIsPossibleLoading(true);
