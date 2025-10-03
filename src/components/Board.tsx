@@ -29,6 +29,8 @@ const Board: React.FC<BoardProps> = ({ boardSize }) => {
 
   const workerRef = useRef<Worker | null>(null);
   const tracebackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const hintRequestStartTime = useRef<number>(0);
+  const possibleRequestStartTime = useRef<number>(0);
 
   const initializeBoard = useCallback(() => {
     const newBoard: number[][] = Array(boardSize).fill(0).map(() => Array(boardSize).fill(0));
@@ -64,37 +66,58 @@ const Board: React.FC<BoardProps> = ({ boardSize }) => {
 
     workerRef.current.onmessage = (event: MessageEvent) => {
       const { type, result, error } = event.data;
+      const currentTime = Date.now();
+
+      const handleResponse = (
+        isLoadingSetter: React.Dispatch<React.SetStateAction<boolean>>,
+        startTimeRef: React.MutableRefObject<number>,
+        callback: () => void
+      ) => {
+        const elapsedTime = currentTime - startTimeRef.current;
+        const remainingDelay = Math.max(0, 1000 - elapsedTime); // Ensure at least 1 second loading
+
+        setTimeout(() => {
+          callback();
+          isLoadingSetter(false);
+        }, remainingDelay);
+      };
 
       if (error) {
-        showError(error);
-        setGameStatus(error);
-        setIsHintLoading(false);
-        setIsPossibleLoading(false);
+        handleResponse(
+          type === 'GET_HINT_RESULT' ? setIsHintLoading : setIsPossibleLoading,
+          type === 'GET_HINT_RESULT' ? hintRequestStartTime : possibleRequestStartTime,
+          () => {
+            showError(error);
+            setGameStatus(error);
+          }
+        );
         return;
       }
 
       switch (type) {
         case 'GET_HINT_RESULT':
-          if (result) {
-            setHintMove(result);
-            showSuccess(`Hint: Move to (${result.row}, ${result.col})`);
-            setGameStatus(`Hint: Move to (${result.row}, ${result.col})`);
-            setHintsRemaining(prev => Math.max(0, prev - 1)); // Decrement hint count
-          } else {
-            showError("No hint available. It might be a dead end or no solution from here.");
-            setGameStatus("No hint available.");
-          }
-          setIsHintLoading(false);
+          handleResponse(setIsHintLoading, hintRequestStartTime, () => {
+            if (result) {
+              setHintMove(result);
+              showSuccess(`Hint: Move to (${result.row}, ${result.col})`);
+              setGameStatus(`Hint: Move to (${result.row}, ${result.col})`);
+              setHintsRemaining(prev => Math.max(0, prev - 1)); // Decrement hint count
+            } else {
+              showError("No hint available. It might be a dead end or no solution from here.");
+              setGameStatus("No hint available.");
+            }
+          });
           break;
         case 'CHECK_POSSIBLE_RESULT':
-          if (result) {
-            showSuccess("Yes, a Knight's Tour is possible from this position!");
-            setGameStatus("A Knight's Tour is possible!");
-          } else {
-            showError("No, a Knight's Tour is NOT possible from this position.");
-            setGameStatus("A Knight's Tour is NOT possible.");
-          }
-          setIsPossibleLoading(false);
+          handleResponse(setIsPossibleLoading, possibleRequestStartTime, () => {
+            if (result) {
+              showSuccess("Yes, a Knight's Tour is possible from this position!");
+              setGameStatus("A Knight's Tour is possible!");
+            } else {
+              showError("No, a Knight's Tour is NOT possible from this position.");
+              setGameStatus("A Knight's Tour is NOT possible.");
+            }
+          });
           break;
         default:
           console.warn('Unknown message type from worker:', type);
@@ -103,16 +126,21 @@ const Board: React.FC<BoardProps> = ({ boardSize }) => {
 
     workerRef.current.onerror = (error) => {
       console.error("Worker error:", error);
+      // This error handler might not have the 'type' info, so we'll assume it's for the currently active loading state
+      if (isHintLoading) {
+        setIsHintLoading(false);
+      }
+      if (isPossibleLoading) {
+        setIsPossibleLoading(false);
+      }
       showError("An error occurred during calculation.");
       setGameStatus("Error during calculation.");
-      setIsHintLoading(false);
-      setIsPossibleLoading(false);
     };
 
     return () => {
       workerRef.current?.terminate();
     };
-  }, []); // This effect should only run once to set up the worker
+  }, [isHintLoading, isPossibleLoading]); // Depend on loading states to ensure correct error handling context
 
   // Effect for traceback animation
   useEffect(() => {
@@ -213,6 +241,7 @@ const Board: React.FC<BoardProps> = ({ boardSize }) => {
     }
     setIsHintLoading(true);
     setGameStatus("Calculating hint...");
+    hintRequestStartTime.current = Date.now(); // Record start time
     workerRef.current?.postMessage({
       type: 'GET_HINT',
       board: board.map(r => [...r]), // Deep copy for worker
@@ -233,6 +262,7 @@ const Board: React.FC<BoardProps> = ({ boardSize }) => {
     }
     setIsPossibleLoading(true);
     setGameStatus("Checking if tour is possible...");
+    possibleRequestStartTime.current = Date.now(); // Record start time
     workerRef.current?.postMessage({
       type: 'CHECK_POSSIBLE',
       board: board.map(r => [...r]), // Deep copy for worker
