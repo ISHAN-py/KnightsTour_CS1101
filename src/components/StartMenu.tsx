@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from 'next-themes';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -13,27 +13,40 @@ interface StartMenuProps {
 
 const StartMenu: React.FC<StartMenuProps> = ({ onStartGame }) => {
   const [currentStep, setCurrentStep] = useState(1); // 1: Start, 2: Board Size, 3: Theme
-  const [selectedBoardSize, setSelectedBoardSize] = useState<number>(6);
+  const [selectedBoardSize, setSelectedBoardSize] = useState<number | null>(null);
   const { theme, setTheme } = useTheme();
-  const [selectedTheme, setSelectedTheme] = useState<'light' | 'dark'>(theme === 'dark' ? 'dark' : 'light');
+  const [selectedTheme, setSelectedTheme] = useState<'light' | 'dark' | null>(null);
+
+  // Initialize selectedTheme based on current theme from next-themes on mount
+  useEffect(() => {
+    if (theme) {
+      setSelectedTheme(theme as 'light' | 'dark');
+    }
+  }, [theme]);
 
   const handleStartClick = () => {
     setCurrentStep(2);
   };
 
-  const handleBoardSizeSelect = (size: number) => {
-    setSelectedBoardSize(size);
-    setCurrentStep(3);
+  const handleBoardSizeChange = (value: string) => {
+    setSelectedBoardSize(parseInt(value));
   };
 
-  const handleThemeSelect = (newTheme: 'light' | 'dark') => {
-    setSelectedTheme(newTheme);
-    setTheme(newTheme); // Apply theme immediately
-    setCurrentStep(4); // Move to final step (or directly start game)
+  const handleThemeChange = (value: 'light' | 'dark') => {
+    setSelectedTheme(value);
+    setTheme(value); // Apply theme immediately
   };
 
-  const handleFinalStartGame = () => {
-    onStartGame(selectedBoardSize, selectedTheme);
+  const handleNextStep = () => {
+    if (currentStep === 2 && selectedBoardSize !== null) {
+      setCurrentStep(3);
+    } else if (currentStep === 3 && selectedTheme !== null) {
+      onStartGame(selectedBoardSize!, selectedTheme!);
+    }
+  };
+
+  const handleBackStep = () => {
+    setCurrentStep(prev => Math.max(1, prev - 1));
   };
 
   return (
@@ -60,8 +73,8 @@ const StartMenu: React.FC<StartMenuProps> = ({ onStartGame }) => {
           </CardHeader>
           <CardContent>
             <RadioGroup
-              defaultValue={selectedBoardSize.toString()}
-              onValueChange={(value) => handleBoardSizeSelect(parseInt(value))}
+              value={selectedBoardSize?.toString() || ""}
+              onValueChange={handleBoardSizeChange}
               className="flex flex-col space-y-2"
             >
               <div className="flex items-center space-x-2">
@@ -74,8 +87,9 @@ const StartMenu: React.FC<StartMenuProps> = ({ onStartGame }) => {
               </div>
             </RadioGroup>
           </CardContent>
-          <CardFooter className="flex justify-end">
-            <Button onClick={() => setCurrentStep(1)} variant="outline">Back</Button>
+          <CardFooter className="flex justify-between">
+            <Button onClick={handleBackStep} variant="outline">Back</Button>
+            <Button onClick={handleNextStep} disabled={selectedBoardSize === null}>Next</Button>
           </CardFooter>
         </Card>
       )}
@@ -88,8 +102,8 @@ const StartMenu: React.FC<StartMenuProps> = ({ onStartGame }) => {
           </CardHeader>
           <CardContent>
             <RadioGroup
-              defaultValue={selectedTheme}
-              onValueChange={(value: 'light' | 'dark') => handleThemeSelect(value)}
+              value={selectedTheme || ""}
+              onValueChange={handleThemeChange}
               className="flex flex-col space-y-2"
             >
               <div className="flex items-center space-x-2">
@@ -103,8 +117,8 @@ const StartMenu: React.FC<StartMenuProps> = ({ onStartGame }) => {
             </RadioGroup>
           </CardContent>
           <CardFooter className="flex justify-between">
-            <Button onClick={() => setCurrentStep(2)} variant="outline">Back</Button>
-            <Button onClick={handleFinalStartGame}>Play!</Button>
+            <Button onClick={handleBackStep} variant="outline">Back</Button>
+            <Button onClick={handleNextStep} disabled={selectedTheme === null}>Play!</Button>
           </CardFooter>
         </Card>
       )}
