@@ -1,13 +1,4 @@
-import { MadeWithDyad } from "@/components/made-with-dyad";
-import Board from "@/components/Board"; // Import the new Board component
-
-const Index = () => {
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
-      <Board /> {/* Render the Board component */}
-      <MadeWithDyad />
-    </div>
-  );
-};
-
-export default Index;
+// This file is no longer needed as GameContainer will handle the main game logic.
+// It can be safely deleted or left empty if not used elsewhere.
+// For now, I'll keep it empty to avoid breaking any potential external references,
+// but in a real scenario, you might delete it.

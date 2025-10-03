@@ -4,14 +4,16 @@ import Controls from './Controls';
 import { showSuccess, showError } from '@/utils/toast';
 import KnightSolverWorker from '../workers/knightSolver?worker'; // Import the worker
 
-const BOARD_SIZE = 6;
+interface BoardProps {
+  boardSize: number;
+}
 
 const knightMoves = [
   [-2, -1], [-2, 1], [-1, -2], [-1, 2],
   [1, -2], [1, 2], [2, -1], [2, 1],
 ];
 
-const Board: React.FC = () => {
+const Board: React.FC<BoardProps> = ({ boardSize }) => {
   const [board, setBoard] = useState<number[][]>([]); // 0: unvisited, 1: visited
   const [knightPos, setKnightPos] = useState<{ row: number; col: number } | null>(null);
   const [visitedCount, setVisitedCount] = useState(0);
@@ -29,7 +31,7 @@ const Board: React.FC = () => {
   const tracebackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const initializeBoard = useCallback(() => {
-    const newBoard: number[][] = Array(BOARD_SIZE).fill(0).map(() => Array(BOARD_SIZE).fill(0));
+    const newBoard: number[][] = Array(boardSize).fill(0).map(() => Array(boardSize).fill(0));
     const initialKnightRow = 0; // Starting position (0,0)
     const initialKnightCol = 0;
 
@@ -51,11 +53,11 @@ const Board: React.FC = () => {
       clearTimeout(tracebackTimeoutRef.current);
       tracebackTimeoutRef.current = null;
     }
-  }, []);
+  }, [boardSize]); // Depend on boardSize
 
   useEffect(() => {
     initializeBoard();
-  }, [initializeBoard]);
+  }, [initializeBoard, boardSize]); // Re-initialize if boardSize changes
 
   useEffect(() => {
     workerRef.current = new KnightSolverWorker();
@@ -110,7 +112,7 @@ const Board: React.FC = () => {
     return () => {
       workerRef.current?.terminate();
     };
-  }, []);
+  }, []); // This effect should only run once to set up the worker
 
   // Effect for traceback animation
   useEffect(() => {
@@ -133,7 +135,7 @@ const Board: React.FC = () => {
 
 
   const isValidMove = (row: number, col: number, currentBoard: number[][]) => {
-    return row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE && currentBoard[row][col] === 0;
+    return row >= 0 && row < boardSize && col >= 0 && col < boardSize && currentBoard[row][col] === 0;
   };
 
   const calculatePossibleMoves = useCallback((currentRow: number, currentCol: number, currentBoard: number[][]) => {
@@ -147,7 +149,7 @@ const Board: React.FC = () => {
     }
     setPossibleMoves(moves);
     return moves;
-  }, []);
+  }, [boardSize]); // Depend on boardSize
 
   useEffect(() => {
     if (knightPos && !isTracingBack) { // Only calculate if not tracing back
@@ -179,7 +181,7 @@ const Board: React.FC = () => {
 
         const nextPossibleMoves = calculatePossibleMoves(row, col, newBoard);
 
-        if (newVisitedCount === BOARD_SIZE * BOARD_SIZE) {
+        if (newVisitedCount === boardSize * boardSize) {
           setGameStatus("Congratulations! You completed the Knight's Tour! Tracing back...");
           showSuccess("Congratulations! You completed the Knight's Tour!");
           setIsTracingBack(true); // Start traceback
@@ -188,7 +190,7 @@ const Board: React.FC = () => {
           setGameStatus("Game Over! No more legal moves from this position.");
           showError("Game Over! No more legal moves from this position.");
         } else {
-          setGameStatus(`Moves: ${newVisitedCount} / ${BOARD_SIZE * BOARD_SIZE}`);
+          setGameStatus(`Moves: ${newVisitedCount} / ${boardSize * boardSize}`);
         }
       } else {
         showError("Invalid move. Knights move in L-shapes and cannot land on visited squares.");
@@ -216,6 +218,7 @@ const Board: React.FC = () => {
       board: board.map(r => [...r]), // Deep copy for worker
       knightPos,
       visitedCount,
+      boardSize, // Pass boardSize to worker
     });
   };
 
@@ -235,13 +238,14 @@ const Board: React.FC = () => {
       board: board.map(r => [...r]), // Deep copy for worker
       knightPos,
       visitedCount,
+      boardSize, // Pass boardSize to worker
     });
   };
 
   return (
     <div className="flex flex-col items-center p-4">
       <h2 className="text-2xl font-bold mb-4">Knight's Tour</h2>
-      <div className="grid grid-cols-6 border border-gray-400 dark:border-gray-600">
+      <div className={`grid grid-cols-${boardSize} border border-gray-400 dark:border-gray-600`}> {/* Dynamic grid-cols */}
         {board.map((rowArr, rowIndex) =>
           rowArr.map((_, colIndex) => (
             <Square
