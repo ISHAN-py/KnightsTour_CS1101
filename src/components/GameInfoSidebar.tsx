@@ -6,7 +6,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Menu } from "lucide-react";
 import HowToPlay from "./HowToPlay";
-import LogicExplanationContent from "./LogicExplanation"; // Renamed import to avoid conflict
+import LogicExplanationContent from "./LogicExplanation";
+import ScoringRules from "./ScoringRules"; // Import the new ScoringRules component
 
 const GameInfoSidebar: React.FC = () => {
   return (
@@ -22,20 +23,26 @@ const GameInfoSidebar: React.FC = () => {
           <SheetTitle className="text-3xl font-bold">Game Information</SheetTitle>
         </SheetHeader>
         <Tabs defaultValue="how-to-play" className="flex flex-col flex-grow overflow-hidden">
-          <TabsList className="grid w-full grid-cols-2 rounded-none border-b bg-background p-0 px-6">
+          <TabsList className="grid w-full grid-cols-3 rounded-none border-b bg-background p-0 px-6"> {/* Changed grid-cols-2 to grid-cols-3 */}
             <TabsTrigger value="how-to-play" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none">
               How to Play
             </TabsTrigger>
             <TabsTrigger value="logic-explanation" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none">
               Logic Explanation
             </TabsTrigger>
+            <TabsTrigger value="scoring-rules" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"> {/* New tab trigger */}
+              Scoring Rules
+            </TabsTrigger>
           </TabsList>
-          <div className="flex-grow overflow-y-auto p-6"> {/* Added p-6 for padding and overflow-y-auto for scrolling */}
+          <div className="flex-grow overflow-y-auto p-6">
             <TabsContent value="how-to-play">
               <HowToPlay />
             </TabsContent>
             <TabsContent value="logic-explanation">
               <LogicExplanationContent />
+            </TabsContent>
+            <TabsContent value="scoring-rules"> {/* New tab content */}
+              <ScoringRules />
             </TabsContent>
           </div>
         </Tabs>
