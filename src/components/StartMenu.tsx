@@ -6,18 +6,20 @@ import { useTheme } from 'next-themes';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input'; // Import Input component
 
 interface StartMenuProps {
-  onStartGame: (boardSize: number, theme: 'light' | 'dark', initialHints: number, underglowColorClass: string, difficulty: 'easy' | 'medium' | 'hard') => void;
+  onStartGame: (boardSize: number, theme: 'light' | 'dark', initialHints: number, underglowColorClass: string, difficulty: 'easy' | 'medium' | 'hard', playerName: string) => void;
 }
 
 const StartMenu: React.FC<StartMenuProps> = ({ onStartGame }) => {
-  const [currentStep, setCurrentStep] = useState(1); // 1: Start, 2: Board Size, 3: Theme, 4: Difficulty
+  const [currentStep, setCurrentStep] = useState(1); // 1: Start, 2: Board Size, 3: Theme, 4: Difficulty, 5: Player Name
   const [selectedBoardSize, setSelectedBoardSize] = useState<number | null>(null);
   const { theme, setTheme } = useTheme();
   const [selectedTheme, setSelectedTheme] = useState<'light' | 'dark' | null>(null);
   const [selectedDifficulty, setSelectedDifficulty] = useState<'easy' | 'medium' | 'hard' | null>(null);
   const [selectedGlowColorClass, setSelectedGlowColorClass] = useState<string>('');
+  const [playerName, setPlayerName] = useState<string>(''); // New state for player name
 
   // Initialize selectedTheme based on current theme from next-themes on mount
   useEffect(() => {
@@ -75,7 +77,9 @@ const StartMenu: React.FC<StartMenuProps> = ({ onStartGame }) => {
     } else if (currentStep === 3 && selectedTheme !== null) {
       setCurrentStep(4);
     } else if (currentStep === 4 && selectedDifficulty !== null) {
-      onStartGame(selectedBoardSize!, selectedTheme!, getHintCount(selectedDifficulty!), selectedGlowColorClass, selectedDifficulty!);
+      setCurrentStep(5); // Move to player name step
+    } else if (currentStep === 5) { // Final step: start game
+      onStartGame(selectedBoardSize!, selectedTheme!, getHintCount(selectedDifficulty!), selectedGlowColorClass, selectedDifficulty!, playerName || 'Guest'); // Use 'Guest' if name is empty
     }
   };
 
@@ -190,7 +194,32 @@ const StartMenu: React.FC<StartMenuProps> = ({ onStartGame }) => {
             </CardContent>
             <CardFooter className="flex justify-between mt-6">
               <Button onClick={handleBackStep} variant="outline" className="py-2 px-4">Back</Button>
-              <Button onClick={handleNextStep} disabled={selectedDifficulty === null} className="py-2 px-4">Play!</Button>
+              <Button onClick={handleNextStep} disabled={selectedDifficulty === null} className="py-2 px-4">Next</Button>
+            </CardFooter>
+          </Card>
+        )}
+
+        {currentStep === 5 && (
+          <Card className="w-full max-w-sm bg-background/80 dark:bg-background/90 shadow-lg dark:shadow-xl rounded-lg p-6">
+            <CardHeader>
+              <CardTitle className="text-2xl font-bold mb-2">Enter Your Name</CardTitle>
+              <CardDescription className="text-muted-foreground">This name will appear on the leaderboard.</CardDescription>
+            </CardHeader>
+            <CardContent className="mt-4">
+              <Label htmlFor="playerName" className="sr-only">Player Name</Label>
+              <Input
+                id="playerName"
+                type="text"
+                placeholder="Your Name (e.g., KnightMaster)"
+                value={playerName}
+                onChange={(e) => setPlayerName(e.target.value)}
+                className="w-full"
+                maxLength={20} // Limit name length
+              />
+            </CardContent>
+            <CardFooter className="flex justify-between mt-6">
+              <Button onClick={handleBackStep} variant="outline" className="py-2 px-4">Back</Button>
+              <Button onClick={handleNextStep} className="py-2 px-4">Play!</Button>
             </CardFooter>
           </Card>
         )}
