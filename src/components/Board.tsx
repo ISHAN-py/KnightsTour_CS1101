@@ -28,7 +28,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
   const [board, setBoard] = useState<number[][]>([]);
   const [knightPos, setKnightPos] = useState<{ row: number; col: number } | null>(null);
   const [visitedCount, setVisitedCount] = useState(0);
-  const [possibleMoves, setPossibleMoves] = useState<Set<string>>(new Set()); // Corrected this line
+  const [possibleMoves, setPossibleMoves] = useState<Set<string>>(new Set());
   const [gameStatus, setGameStatus] = useState<string>("");
   const [hintMove, setHintMove] = useState<{ row: number; col: number } | null>(null);
   const [isHintLoading, setIsHintLoading] = useState(false);
@@ -141,6 +141,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
     workerRef.current.onmessage = (event: MessageEvent) => {
       const { type, result, error } = event.data;
       const currentTime = Date.now();
+      console.log(`Received message from worker: ${type}`); // Debug log
 
       const handleResponse = (
         isLoadingSetter: React.Dispatch<React.SetStateAction<boolean>>,
@@ -153,6 +154,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
         setTimeout(() => {
           callback();
           isLoadingSetter(false);
+          console.log(`Loading state reset for type: ${type}`); // Debug log
         }, remainingDelay);
       };
 
@@ -328,8 +330,9 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
       return;
     }
     setIsHintLoading(true);
-    setGameStatus("Calculating hint...");
+    setGameStatus("Calculating hint... this might take a moment for larger boards."); // Updated message
     hintRequestStartTime.current = Date.now();
+    console.log("Sending GET_HINT message to worker."); // Debug log
     workerRef.current?.postMessage({
       type: 'GET_HINT',
       board: board.map(r => [...r]),
@@ -349,9 +352,10 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
       return;
     }
     setIsPossibleLoading(true);
-    setGameStatus("Checking if tour is possible...");
+    setGameStatus("Checking if tour is possible... this might take a moment for larger boards."); // Updated message
     setIsPossibleCheckCount(prev => prev + 1);
     possibleRequestStartTime.current = Date.now();
+    console.log("Sending CHECK_POSSIBLE message to worker."); // Debug log
     workerRef.current?.postMessage({
       type: 'CHECK_POSSIBLE',
       board: board.map(r => [...r]),
