@@ -46,6 +46,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
 
   const workerRef = useRef<Worker | null>(null);
   const tracebackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const workerTimeoutRef = useRef<NodeJS.Timeout | null>(null); // New ref for worker timeout
   const hintRequestStartTime = useRef<number>(0);
   const possibleRequestStartTime = useRef<number>(0);
 
@@ -129,6 +130,10 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
       clearTimeout(tracebackTimeoutRef.current);
       tracebackTimeoutRef.current = null;
     }
+    if (workerTimeoutRef.current) { // Clear worker timeout on new game
+      clearTimeout(workerTimeoutRef.current);
+      workerTimeoutRef.current = null;
+    }
   }, [boardSize, initialHints]);
 
   useEffect(() => {
@@ -139,6 +144,11 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
     workerRef.current = new KnightSolverWorker();
 
     workerRef.current.onmessage = (event: MessageEvent) => {
+      if (workerTimeoutRef.current) { // Clear timeout if worker responds
+        clearTimeout(workerTimeoutRef.current);
+        workerTimeoutRef.current = null;
+      }
+
       const { type, result, error } = event.data;
       const currentTime = Date.now();
       console.log(`Received message from worker: ${type}`); // Debug log
@@ -202,6 +212,10 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
 
     workerRef.current.onerror = (error) => {
       console.error("Worker error:", error);
+      if (workerTimeoutRef.current) { // Clear timeout on worker error
+        clearTimeout(workerTimeoutRef.current);
+        workerTimeoutRef.current = null;
+      }
       if (isHintLoading) {
         setIsHintLoading(false);
       }
@@ -214,6 +228,10 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
 
     return () => {
       workerRef.current?.terminate();
+      if (workerTimeoutRef.current) { // Clear timeout on component unmount
+        clearTimeout(workerTimeoutRef.current);
+        workerTimeoutRef.current = null;
+      }
     };
   }, [isHintLoading, isPossibleLoading]);
 
@@ -330,9 +348,9 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
       return;
     }
     setIsHintLoading(true);
-    setGameStatus("Calculating hint... this might take a moment for larger boards."); // Updated message
+    setGameStatus("Calculating hint... this might take a moment for larger boards.");
     hintRequestStartTime.current = Date.now();
-    console.log("Sending GET_HINT message to worker."); // Debug log
+    console.log("Sending GET_HINT message to worker.");
     workerRef.current?.postMessage({
       type: 'GET_HINT',
       board: board.map(r => [...r]),
@@ -340,6 +358,15 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
       visitedCount,
       boardSize,
     });
+
+    workerTimeoutRef.current = setTimeout(() => {
+      setIsHintLoading(false);
+      showError("Hint calculation timed out. Please try a new game or a different move.");
+      setGameStatus("Hint calculation timed out.");
+      workerRef.current?.terminate(); // Terminate the worker to free resources
+      workerRef.current = new KnightSolverWorker(); // Reinitialize worker
+      console.log("Hint worker timed out and reinitialized.");
+    }, 15000); // 15 seconds timeout
   };
 
   const handleCheckPossible = () => {
@@ -352,10 +379,10 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
       return;
     }
     setIsPossibleLoading(true);
-    setGameStatus("Checking if tour is possible... this might take a moment for larger boards."); // Updated message
+    setGameStatus("Checking if tour is possible... this might take a moment for larger boards.");
     setIsPossibleCheckCount(prev => prev + 1);
     possibleRequestStartTime.current = Date.now();
-    console.log("Sending CHECK_POSSIBLE message to worker."); // Debug log
+    console.log("Sending CHECK_POSSIBLE message to worker.");
     workerRef.current?.postMessage({
       type: 'CHECK_POSSIBLE',
       board: board.map(r => [...r]),
@@ -363,6 +390,15 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
       visitedCount,
       boardSize,
     });
+
+    workerTimeoutRef.current = setTimeout(() => {
+      setIsPossibleLoading(false);
+      showError("Possibility check timed out. Please try a new game or a different move.");
+      setGameStatus("Possibility check timed out.");
+      workerRef.current?.terminate(); // Terminate the worker to free resources
+      workerRef.current = new KnightSolverWorker(); // Reinitialize worker
+      console.log("Possibility check worker timed out and reinitialized.");
+    }, 15000); // 15 seconds timeout
   };
 
   return (
