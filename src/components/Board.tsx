@@ -17,6 +17,7 @@ interface BoardProps {
   underglowColorClass: string;
   difficulty: 'easy' | 'medium' | 'hard';
   playerName: string; // New prop for player name
+  totalEntries: number | null; // New prop for total entries
 }
 
 const knightMoves = [
@@ -24,7 +25,7 @@ const knightMoves = [
   [1, -2], [1, 2], [2, -1], [2, 1],
 ];
 
-const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, underglowColorClass, difficulty, playerName }) => {
+const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, underglowColorClass, difficulty, playerName, totalEntries }) => {
   const [board, setBoard] = useState<number[][]>([]);
   const [knightPos, setKnightPos] = useState<{ row: number; col: number } | null>(null);
   const [visitedCount, setVisitedCount] = useState(0);
@@ -371,7 +372,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
 
   return (
     <div className="flex flex-col items-center p-4 relative">
-      <GameInfoSidebar open={isSidebarOpen} onOpenChange={setIsSidebarOpen} />
+      <GameInfoSidebar open={isSidebarOpen} onOpenChange={setIsSidebarOpen} totalEntries={totalEntries} />
       <h2 className="text-2xl font-bold mb-4">Knight's Tour</h2>
       <div className="text-xl font-semibold mb-4">
         Current Score: {currentScore}

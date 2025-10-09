@@ -12,9 +12,10 @@ import ScoringRules from "./ScoringRules"; // Import the new ScoringRules compon
 interface GameInfoSidebarProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  totalEntries: number | null; // New prop for total entries
 }
 
-const GameInfoSidebar: React.FC<GameInfoSidebarProps> = ({ open, onOpenChange }) => {
+const GameInfoSidebar: React.FC<GameInfoSidebarProps> = ({ open, onOpenChange, totalEntries }) => {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>
@@ -49,6 +50,13 @@ const GameInfoSidebar: React.FC<GameInfoSidebarProps> = ({ open, onOpenChange })
             <TabsContent value="scoring-rules">
               <ScoringRules />
             </TabsContent>
+            {totalEntries !== null && (
+              <div className="mt-6 p-4 bg-muted/50 dark:bg-muted-foreground/10 rounded-md text-center">
+                <p className="text-sm text-muted-foreground">
+                  Number of tourists that tried before you: <span className="font-bold text-primary">{totalEntries}</span>
+                </p>
+              </div>
+            )}
           </div>
         </Tabs>
       </SheetContent>

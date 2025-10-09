@@ -11,7 +11,7 @@ import { showError } from '@/utils/toast'; // Import showError for toast notific
 import { supabase } from '@/integrations/supabase/client'; // Import supabase client
 
 interface StartMenuProps {
-  onStartGame: (boardSize: number, theme: 'light' | 'dark', initialHints: number, underglowColorClass: string, difficulty: 'easy' | 'medium' | 'hard', playerName: string) => void;
+  onStartGame: (boardSize: number, theme: 'light' | 'dark', initialHints: number, underglowColorClass: string, difficulty: 'easy' | 'medium' | 'hard', playerName: string, totalEntries: number | null) => void;
 }
 
 const DISALLOWED_KEYWORDS = ["jimson", "bitch", "fuck", "matthew", "saala", "kamina", "bewakoof", "madarchod"];
@@ -124,7 +124,7 @@ const StartMenu: React.FC<StartMenuProps> = ({ onStartGame }) => {
       setCurrentStep(5); // Move to player name step
     } else if (currentStep === 5) { // Final step: start game
       if (validatePlayerName(playerName)) {
-        onStartGame(selectedBoardSize!, selectedTheme!, getHintCount(selectedDifficulty!), selectedGlowColorClass, selectedDifficulty!, playerName || 'Guest'); // Use 'Guest' if name is empty
+        onStartGame(selectedBoardSize!, selectedTheme!, getHintCount(selectedDifficulty!), selectedGlowColorClass, selectedDifficulty!, playerName || 'Guest', totalEntries); // Use 'Guest' if name is empty
       }
     }
   };

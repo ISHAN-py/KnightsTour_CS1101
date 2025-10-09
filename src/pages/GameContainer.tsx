@@ -15,6 +15,7 @@ const GameContainer: React.FC = () => {
   const [underglowColorClass, setUnderglowColorClass] = useState<string>('');
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
   const [playerName, setPlayerName] = useState<string>('Guest'); // New state for player name, default to 'Guest'
+  const [totalEntries, setTotalEntries] = useState<number | null>(null); // New state for total entries
 
   useEffect(() => {
     // Ensure the theme from next-themes is reflected in local state
@@ -23,7 +24,7 @@ const GameContainer: React.FC = () => {
     }
   }, [theme]);
 
-  const handleStartGame = (size: number, chosenTheme: 'light' | 'dark', hints: number, glowClass: string, selectedDifficulty: 'easy' | 'medium' | 'hard', name: string) => {
+  const handleStartGame = (size: number, chosenTheme: 'light' | 'dark', hints: number, glowClass: string, selectedDifficulty: 'easy' | 'medium' | 'hard', name: string, entries: number | null) => {
     setBoardSize(size);
     setSelectedTheme(chosenTheme);
     setTheme(chosenTheme); // Apply theme if not already set by StartMenu
@@ -31,6 +32,7 @@ const GameContainer: React.FC = () => {
     setUnderglowColorClass(glowClass);
     setDifficulty(selectedDifficulty);
     setPlayerName(name); // Set the player name
+    setTotalEntries(entries); // Set total entries
     setGameStarted(true);
   };
 
@@ -51,6 +53,7 @@ const GameContainer: React.FC = () => {
             underglowColorClass={underglowColorClass}
             difficulty={difficulty}
             playerName={playerName} // Pass player name to Board
+            totalEntries={totalEntries} // Pass total entries to Board
           />
           <HighScoreTable boardSize={boardSize} />
         </>
