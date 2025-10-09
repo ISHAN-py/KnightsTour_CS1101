@@ -25,23 +25,33 @@ const LogicExplanationContent: React.FC<LogicExplanationContentProps> = () => {
         <p className="mb-3">
           The Knight's Tour is a classic chess problem where a knight must visit every square on a chessboard exactly once.
           Finding a solution, especially for larger boards, requires a systematic approach. Our solver now uses a robust
-          **Backtracking with Depth-First Search (DFS)** algorithm to guarantee finding a solution if one exists.
+          **Backtracking with Warnsdorff's Rule** algorithm to efficiently find a solution if one exists.
         </p>
 
-        <h3 className="text-xl font-semibold mt-6 mb-3">2. Current Algorithm: Backtracking with Depth-First Search (DFS)</h3>
+        <h3 className="text-xl font-semibold mt-6 mb-3">2. Current Algorithm: Backtracking with Warnsdorff's Rule</h3>
         <p className="mb-3">
+          We've re-integrated **Warnsdorff's Rule** as a primary optimization within a **Backtracking Depth-First Search (DFS)** algorithm.
           Backtracking is a general algorithmic technique for solving problems recursively by trying to build a solution
           incrementally. If a partial solution cannot be completed into a valid solution, it "backtracks" to an earlier
-          state and tries a different path. This approach, combined with Depth-First Search, ensures that every possible
-          path is explored until a complete tour is found.
+          state and tries a different path.
+        </p>
+        <p className="mb-3">
+          Warnsdorff's Rule is a heuristic that guides this search. It suggests that at each step, the knight should move to the square from which it has the fewest onward moves. The idea is to prioritize moves that lead to squares with fewer escape routes, thus preventing the knight from getting trapped too early and often leading to a solution much faster than a pure DFS.
         </p>
         <p className="mb-3">
           In the Knight's Tour, this means:
         </p>
         <ol className="list-decimal list-inside ml-4 mb-3">
-          <li>Start at a given square and mark it as visited (e.g., with move number 1, or simply '1').</li>
-          <li>From the current square, try all 8 possible knight moves in a predefined order.</li>
-          <li>For each valid move (i.e., the destination square is within board bounds and has not been visited yet):
+          <li>Start at a given square and mark it as visited.</li>
+          <li>From the current square, calculate all 8 possible knight moves.</li>
+          <li>For each valid potential next move (i.e., within board bounds and not yet visited):
+            <ul className="list-disc list-inside ml-4">
+              <li>Temporarily consider moving to that square.</li>
+              <li>Calculate the "degree" of that square: the number of valid moves *from that square* to *unvisited* squares.</li>
+            </ul>
+          </li>
+          <li>Sort these potential moves based on their calculated degree, prioritizing moves with the lowest degree. A random tie-breaker is used for moves with equal degrees to encourage varied paths.</li>
+          <li>Try moves in this sorted order:
             <ul className="list-disc list-inside ml-4">
               <li>Mark the new square as visited.</li>
               <li>Add the new square to the current path.</li>
@@ -54,70 +64,52 @@ const LogicExplanationContent: React.FC<LogicExplanationContentProps> = () => {
           <li>If all possible moves from the current square have been tried and none led to a solution, return failure.</li>
         </ol>
         <p className="mb-3">
-          This is an exhaustive search algorithm, meaning it is guaranteed to find a Knight's Tour if one exists from the starting position.
+          This combined approach leverages the efficiency of Warnsdorff's Rule to quickly find a path, while the backtracking ensures that if the heuristic leads to a dead end, the solver can still explore other options to guarantee finding a solution if one exists.
         </p>
 
         <h4 className="text-lg font-semibold mt-4 mb-2">Code Snippet: `solveKnightTour` (simplified)</h4>
         <pre className="bg-gray-100 dark:bg-gray-800 p-3 rounded-md overflow-x-auto text-sm mb-3">
           <code>
 {`const solveKnightTour = (board, r, c, moveCount, path, boardSize) => {
-  if (moveCount === boardSize * boardSize) {
-    return path; // Tour found!
-  }
+  if (moveCount === boardSize * boardSize) return path;
 
+  const possibleNextMoves = [];
   for (const [dr, dc] of knightMoves) {
     const nextR = r + dr;
     const nextC = c + dc;
     if (isValid(nextR, nextC, boardSize, board)) {
-      board[nextR][nextC] = 1; // Make move (mark as visited)
-      path.push({ row: nextR, col: nextC });
-
-      const result = solveKnightTour(board, nextR, nextC, moveCount + 1, path, boardSize);
-      if (result) return result; // Solution found
-
-      path.pop(); // Backtrack (unmake move)
-      board[nextR][nextC] = 0; // Unmark move
+      board[nextR][nextC] = 1; // Temporarily mark for degree calc
+      const degree = getDegree(nextR, nextC, boardSize, board);
+      board[nextR][nextC] = 0; // Revert
+      possibleNextMoves.push({ row: nextR, col: nextC, degree });
     }
   }
-  return null; // No solution from this path
+
+  possibleNextMoves.sort((a, b) => a.degree - b.degree || Math.random() - 0.5);
+
+  for (const move of possibleNextMoves) {
+    board[move.row][move.col] = 1;
+    path.push({ row: move.row, col: move.col });
+
+    const result = solveKnightTour(board, move.row, move.col, moveCount + 1, path, boardSize);
+    if (result) return result;
+
+    path.pop();
+    board[move.row][move.col] = 0;
+  }
+  return null;
 };`}
           </code>
         </pre>
 
-        <h3 className="text-xl font-semibold mt-6 mb-3">3. History: Previous Algorithm (Warnsdorff's Rule)</h3>
+        <h3 className="text-xl font-semibold mt-6 mb-3">3. Why Warnsdorff's Rule is Effective</h3>
         <p className="mb-3">
-          Initially, the solver incorporated **Warnsdorff's Rule** as an optimization alongside backtracking. This heuristic suggests that at each step, the knight should move to the square from which it has the fewest onward moves. The idea is to prioritize moves that lead to squares with fewer escape routes, thus preventing the knight from getting trapped too early.
-        </p>
-        <p className="mb-3">
-          **How it worked:**
-        </p>
-        <ul className="list-disc list-inside ml-4 mb-3">
-          <li>At each step, all valid next moves were calculated.</li>
-          <li>For each potential next move, the number of valid moves *from that square* (its "degree") was counted.</li>
-          <li>Moves were then sorted, prioritizing those with the lowest degree.</li>
-          <li>A random tie-breaker was also introduced for moves with equal degrees to encourage exploration.</li>
-        </ul>
-        <p className="mb-3">
-          **Pitfalls and Why We Switched:**
-        </p>
-        <ul className="list-disc list-inside ml-4 mb-3">
-          <li>
-            **Heuristic Limitations:** While often effective for finding *a* tour quickly, Warnsdorff's Rule is a heuristic, not a guarantee. It doesn't always find a solution even if one exists, especially on certain board configurations or when the "optimal" path isn't strictly the one with the fewest onward moves.
-          </li>
-          <li>
-            **False Negatives for "Is Possible?":** This limitation became particularly problematic for the "Is possible?" feature. If the heuristic-driven solver failed to find a path on its first (or even several random) attempts, it would incorrectly report that no tour was possible, even when a valid tour existed. The random tie-breaker, while intended to help, sometimes exacerbated this by leading the solver down unproductive paths.
-          </li>
-          <li>
-            **Complexity for Guarantee:** To guarantee a solution with Warnsdorff's Rule, one would still need to implement a full backtracking mechanism that explores all branches, effectively negating the heuristic's primary benefit for a "guaranteed" check.
-          </li>
-        </ul>
-        <p className="mt-4">
-          By switching to a pure DFS backtracking approach, we ensure that the solver will always find a Knight's Tour if one exists, making the "Is possible?" feature and hints completely reliable, albeit potentially at the cost of slightly longer computation times for very complex scenarios (which are offloaded to a Web Worker).
+          Warnsdorff's Rule is particularly effective for the Knight's Tour because it helps navigate the search space more intelligently. By prioritizing moves to squares with fewer escape routes, it tends to push the knight into the "corners" or more constrained areas of the board early on. This prevents the knight from getting trapped later in the game when it's surrounded by already visited squares, which is a common pitfall for simpler search strategies. While it's a heuristic and not a guarantee on its own, when combined with backtracking, it significantly prunes the search tree, leading to faster discovery of solutions.
         </p>
 
         <h3 className="text-xl font-semibold mt-6 mb-3">4. Web Worker Logic</h3>
         <p className="mb-3">
-          The Knight's Tour solver, especially for larger boards, can be computationally intensive. If this logic were run
+          The Knight's Tour solver, especially for larger boards, can still be computationally intensive even with Warnsdorff's Rule. If this logic were run
           directly on the main thread (where the UI renders), it would cause the application to freeze and become
           unresponsive until the calculation is complete.
         </p>

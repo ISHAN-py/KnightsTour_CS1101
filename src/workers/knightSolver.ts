@@ -8,8 +8,23 @@ const isValid = (r: number, c: number, boardSize: number, board: number[][]) => 
   return r >= 0 && r < boardSize && c >= 0 && c < boardSize && board[r][c] === 0;
 };
 
+// Helper function to get the number of valid moves from a given square (degree)
+// This function needs to be aware of the current board state (visited squares)
+const getDegree = (r: number, c: number, boardSize: number, currentBoard: number[][]) => {
+  let count = 0;
+  for (const [dr, dc] of knightMoves) {
+    const nextR = r + dr;
+    const nextC = c + dc;
+    // A move is valid if it's within bounds and to an unvisited square
+    if (nextR >= 0 && nextR < boardSize && nextC >= 0 && nextC < boardSize && currentBoard[nextR][nextC] === 0) {
+      count++;
+    }
+  }
+  return count;
+};
+
 /**
- * Finds a Knight's Tour path using a pure Depth-First Search (DFS) backtracking algorithm.
+ * Finds a Knight's Tour path using Backtracking with Warnsdorff's Rule.
  * @param board The current state of the board (0 for unvisited, 1 for visited).
  * @param currentRow The current row of the knight.
  * @param currentCol The current column of the knight.
@@ -31,27 +46,51 @@ const solveKnightTour = (
     return path;
   }
 
-  // Try all 8 possible knight moves
+  // Calculate all possible next moves and their degrees
+  const possibleNextMoves: { row: number; col: number; degree: number }[] = [];
   for (const [dr, dc] of knightMoves) {
     const nextR = currentRow + dr;
     const nextC = currentCol + dc;
 
     if (isValid(nextR, nextC, boardSize, board)) {
-      // Make the move
-      board[nextR][nextC] = 1; // Mark as visited
-      path.push({ row: nextR, col: nextC });
+      // Temporarily mark the square as visited to calculate its degree accurately
+      // This is crucial because getDegree should not count moves back to the current path
+      board[nextR][nextC] = 1; // Temporarily mark as visited
+      const degree = getDegree(nextR, nextC, boardSize, board);
+      board[nextR][nextC] = 0; // Revert for actual backtracking
 
-      // Recursively try to find a tour from the new square
-      const result = solveKnightTour(board, nextR, nextC, currentVisitedCount + 1, path, boardSize);
-
-      if (result) {
-        return result; // If a tour is found, return it
-      }
-
-      // Backtrack: Unmake the move if it didn't lead to a solution
-      path.pop();
-      board[nextR][nextC] = 0; // Mark as unvisited
+      possibleNextMoves.push({ row: nextR, col: nextC, degree });
     }
+  }
+
+  // Sort moves based on Warnsdorff's Rule (lowest degree first)
+  // Add a random tie-breaker to explore different paths if degrees are equal
+  possibleNextMoves.sort((a, b) => {
+    if (a.degree === b.degree) {
+      return Math.random() - 0.5; // Random tie-breaker
+    }
+    return a.degree - b.degree;
+  });
+
+  // Try moves in the sorted order
+  for (const move of possibleNextMoves) {
+    const nextR = move.row;
+    const nextC = move.col;
+
+    // Make the move
+    board[nextR][nextC] = 1; // Mark as visited
+    path.push({ row: nextR, col: nextC });
+
+    // Recursively try to find a tour from the new square
+    const result = solveKnightTour(board, nextR, nextC, currentVisitedCount + 1, path, boardSize);
+
+    if (result) {
+      return result; // If a tour is found, return it
+    }
+
+    // Backtrack: Unmake the move if it didn't lead to a solution
+    path.pop();
+    board[nextR][nextC] = 0; // Mark as unvisited
   }
 
   return null; // No solution found from this path
