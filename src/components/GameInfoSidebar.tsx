@@ -9,9 +9,14 @@ import HowToPlay from "./HowToPlay";
 import LogicExplanationContent from "./LogicExplanation";
 import ScoringRules from "./ScoringRules"; // Import the new ScoringRules component
 
-const GameInfoSidebar: React.FC = () => {
+interface GameInfoSidebarProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+const GameInfoSidebar: React.FC<GameInfoSidebarProps> = ({ open, onOpenChange }) => {
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>
         <Button variant="outline" size="icon" className="absolute top-4 left-4 z-20">
           <Menu className="h-4 w-4" />
@@ -23,14 +28,14 @@ const GameInfoSidebar: React.FC = () => {
           <SheetTitle className="text-3xl font-bold">Game Information</SheetTitle>
         </SheetHeader>
         <Tabs defaultValue="how-to-play" className="flex flex-col flex-grow overflow-hidden">
-          <TabsList className="grid w-full grid-cols-3 rounded-none border-b bg-background p-0 px-6"> {/* Changed grid-cols-2 to grid-cols-3 */}
+          <TabsList className="grid w-full grid-cols-3 rounded-none border-b bg-background p-0 px-6">
             <TabsTrigger value="how-to-play" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none">
               How to Play
             </TabsTrigger>
             <TabsTrigger value="logic-explanation" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none">
               Logic Explanation
             </TabsTrigger>
-            <TabsTrigger value="scoring-rules" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"> {/* New tab trigger */}
+            <TabsTrigger value="scoring-rules" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none">
               Scoring Rules
             </TabsTrigger>
           </TabsList>
@@ -41,7 +46,7 @@ const GameInfoSidebar: React.FC = () => {
             <TabsContent value="logic-explanation">
               <LogicExplanationContent />
             </TabsContent>
-            <TabsContent value="scoring-rules"> {/* New tab content */}
+            <TabsContent value="scoring-rules">
               <ScoringRules />
             </TabsContent>
           </div>

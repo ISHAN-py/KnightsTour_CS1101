@@ -39,6 +39,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
   const [isTracingBack, setIsTracingBack] = useState(false);
   const [tracebackIndex, setTracebackIndex] = useState(0);
   const [currentScore, setCurrentScore] = useState(0); // New state for current score
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true); // State to control sidebar visibility
 
   // Animation states
   const [animatingKnightFrom, setAnimatingKnightFrom] = useState<{ row: number; col: number } | null>(null);
@@ -132,6 +133,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
     setAnimatingKnightFrom(null);
     setAnimatingKnightTo(null);
     setIsAnimatingMove(false);
+    setIsSidebarOpen(true); // Open sidebar by default on new game
     if (tracebackTimeoutRef.current) {
       clearTimeout(tracebackTimeoutRef.current);
       tracebackTimeoutRef.current = null;
@@ -369,7 +371,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
 
   return (
     <div className="flex flex-col items-center p-4 relative">
-      <GameInfoSidebar />
+      <GameInfoSidebar open={isSidebarOpen} onOpenChange={setIsSidebarOpen} />
       <h2 className="text-2xl font-bold mb-4">Knight's Tour</h2>
       <div className="text-xl font-semibold mb-4">
         Current Score: {currentScore}
