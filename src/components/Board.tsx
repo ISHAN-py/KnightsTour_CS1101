@@ -28,7 +28,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
   const [board, setBoard] = useState<number[][]>([]);
   const [knightPos, setKnightPos] = useState<{ row: number; col: number } | null>(null);
   const [visitedCount, setVisitedCount] = useState(0);
-  const [possibleMoves, setPossibleMoves] = useState<Set<string>>(new Set());
+  const [possibleMoves, setPossibleMoves] = new Set<string>();
   const [gameStatus, setGameStatus] = useState<string>("");
   const [hintMove, setHintMove] = useState<{ row: number; col: number } | null>(null);
   const [isHintLoading, setIsHintLoading] = useState(false);
@@ -46,8 +46,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
 
   const workerRef = useRef<Worker | null>(null);
   const tracebackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const hintRequestStartTime = useRef<number>(0);
-  const possibleRequestStartTime = useRef<number>(0);
+  // Removed hintRequestStartTime and possibleRequestStartTime as they are no longer needed for delay
 
   const getDifficultyMultiplier = (diff: 'easy' | 'medium' | 'hard') => {
     switch (diff) {
@@ -140,28 +139,20 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
 
     workerRef.current.onmessage = (event: MessageEvent) => {
       const { type, result, error } = event.data;
-      const currentTime = Date.now();
       console.log(`Received message from worker: ${type}`); // Debug log
 
       const handleResponse = (
         isLoadingSetter: React.Dispatch<React.SetStateAction<boolean>>,
-        startTimeRef: React.MutableRefObject<number>,
         callback: () => void
       ) => {
-        const elapsedTime = currentTime - startTimeRef.current;
-        const remainingDelay = Math.max(0, 1000 - elapsedTime);
-
-        setTimeout(() => {
-          callback();
-          isLoadingSetter(false);
-          console.log(`Loading state reset for type: ${type}`); // Debug log
-        }, remainingDelay);
+        callback(); // Execute the result callback immediately
+        isLoadingSetter(false); // Clear loading state immediately
+        console.log(`Loading state reset for type: ${type}`); // Debug log
       };
 
       if (error) {
         handleResponse(
           type === 'GET_HINT_RESULT' ? setIsHintLoading : setIsPossibleLoading,
-          type === 'GET_HINT_RESULT' ? hintRequestStartTime : possibleRequestStartTime,
           () => {
             showError(error);
             setGameStatus(error);
@@ -172,7 +163,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
 
       switch (type) {
         case 'GET_HINT_RESULT':
-          handleResponse(setIsHintLoading, hintRequestStartTime, () => {
+          handleResponse(setIsHintLoading, () => {
             if (result) {
               setHintMove(result);
               showSuccess(`Hint: Move to (${result.row}, ${result.col})`);
@@ -185,7 +176,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
           });
           break;
         case 'CHECK_POSSIBLE_RESULT':
-          handleResponse(setIsPossibleLoading, possibleRequestStartTime, () => {
+          handleResponse(setIsPossibleLoading, () => {
             if (result) {
               showSuccess("Yes, a Knight's Tour is possible from this position!");
               setGameStatus("A Knight's Tour is possible!");
@@ -330,8 +321,8 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
       return;
     }
     setIsHintLoading(true);
-    setGameStatus("Calculating hint... this might take a moment for larger boards."); // Updated message
-    hintRequestStartTime.current = Date.now();
+    setGameStatus("Calculating hint... this might take a moment for larger boards.");
+    // Removed hintRequestStartTime.current = Date.now();
     console.log("Sending GET_HINT message to worker."); // Debug log
     workerRef.current?.postMessage({
       type: 'GET_HINT',
@@ -352,9 +343,9 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
       return;
     }
     setIsPossibleLoading(true);
-    setGameStatus("Checking if tour is possible... this might take a moment for larger boards."); // Updated message
+    setGameStatus("Checking if tour is possible... this might take a moment for larger boards.");
     setIsPossibleCheckCount(prev => prev + 1);
-    possibleRequestStartTime.current = Date.now();
+    // Removed possibleRequestStartTime.current = Date.now();
     console.log("Sending CHECK_POSSIBLE message to worker."); // Debug log
     workerRef.current?.postMessage({
       type: 'CHECK_POSSIBLE',
