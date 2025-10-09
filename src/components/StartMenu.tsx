@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input'; // Import Input component
 import { showError } from '@/utils/toast'; // Import showError for toast notifications
+import { supabase } from '@/integrations/supabase/client'; // Import supabase client
 
 interface StartMenuProps {
   onStartGame: (boardSize: number, theme: 'light' | 'dark', initialHints: number, underglowColorClass: string, difficulty: 'easy' | 'medium' | 'hard', playerName: string) => void;
@@ -24,6 +25,7 @@ const StartMenu: React.FC<StartMenuProps> = ({ onStartGame }) => {
   const [selectedGlowColorClass, setSelectedGlowColorClass] = useState<string>('');
   const [playerName, setPlayerName] = useState<string>(''); // New state for player name
   const [playerNameError, setPlayerNameError] = useState<string | null>(null); // State for player name validation error
+  const [totalEntries, setTotalEntries] = useState<number | null>(null); // State for total high score entries
 
   // Initialize selectedTheme based on current theme from next-themes on mount
   useEffect(() => {
@@ -31,6 +33,31 @@ const StartMenu: React.FC<StartMenuProps> = ({ onStartGame }) => {
       setSelectedTheme(theme === 'dark' ? 'dark' : 'light');
     }
   }, [theme]);
+
+  // Fetch total high score entries from Supabase
+  useEffect(() => {
+    const fetchTotalEntries = async () => {
+      try {
+        const { count: count5x5, error: error5x5 } = await supabase
+          .from('high_scores_5x5')
+          .select('*', { count: 'exact', head: true });
+
+        const { count: count6x6, error: error6x6 } = await supabase
+          .from('high_scores_6x6')
+          .select('*', { count: 'exact', head: true });
+
+        if (error5x5) console.error('Error fetching 5x5 high scores count:', error5x5);
+        if (error6x6) console.error('Error fetching 6x6 high scores count:', error6x6);
+
+        setTotalEntries((count5x5 || 0) + (count6x6 || 0));
+      } catch (error) {
+        console.error('Failed to fetch total high score entries:', error);
+        setTotalEntries(0); // Default to 0 on error
+      }
+    };
+
+    fetchTotalEntries();
+  }, []);
 
   const handleStartClick = () => {
     setCurrentStep(2);
@@ -120,10 +147,15 @@ const StartMenu: React.FC<StartMenuProps> = ({ onStartGame }) => {
               <CardTitle className="text-3xl font-bold text-center mb-2">Knight's Tour</CardTitle>
               <CardDescription className="text-center text-muted-foreground">Embark on a classic chess puzzle!</CardDescription>
             </CardHeader>
-            <CardContent className="flex justify-center mt-6">
+            <CardContent className="flex flex-col items-center mt-6">
               <Button onClick={handleStartClick} className="w-full py-3 text-lg">
                 Start Game
               </Button>
+              {totalEntries !== null && (
+                <p className="mt-4 text-sm text-muted-foreground text-center">
+                  Number of tourists that tried before you: <span className="font-bold text-primary">{totalEntries}</span>
+                </p>
+              )}
             </CardContent>
           </Card>
         )}
