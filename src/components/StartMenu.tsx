@@ -13,7 +13,7 @@ interface StartMenuProps {
   onStartGame: (boardSize: number, theme: 'light' | 'dark', initialHints: number, underglowColorClass: string, difficulty: 'easy' | 'medium' | 'hard', playerName: string) => void;
 }
 
-const DISALLOWED_KEYWORDS = ["jimson", "bitch", "fuck", "matthew"];
+const DISALLOWED_KEYWORDS = ["jimson", "bitch", "fuck", "matthew", "saala", "kamina", "bewakoof", "madarchod"];
 
 const StartMenu: React.FC<StartMenuProps> = ({ onStartGame }) => {
   const [currentStep, setCurrentStep] = useState(1); // 1: Start, 2: Board Size, 3: Theme, 4: Difficulty, 5: Player Name
