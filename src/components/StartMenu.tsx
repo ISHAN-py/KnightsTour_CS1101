@@ -7,10 +7,13 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input'; // Import Input component
+import { showError } from '@/utils/toast'; // Import showError for toast notifications
 
 interface StartMenuProps {
   onStartGame: (boardSize: number, theme: 'light' | 'dark', initialHints: number, underglowColorClass: string, difficulty: 'easy' | 'medium' | 'hard', playerName: string) => void;
 }
+
+const DISALLOWED_KEYWORDS = ["jimson", "bitch", "fuck", "matthew"];
 
 const StartMenu: React.FC<StartMenuProps> = ({ onStartGame }) => {
   const [currentStep, setCurrentStep] = useState(1); // 1: Start, 2: Board Size, 3: Theme, 4: Difficulty, 5: Player Name
@@ -20,6 +23,7 @@ const StartMenu: React.FC<StartMenuProps> = ({ onStartGame }) => {
   const [selectedDifficulty, setSelectedDifficulty] = useState<'easy' | 'medium' | 'hard' | null>(null);
   const [selectedGlowColorClass, setSelectedGlowColorClass] = useState<string>('');
   const [playerName, setPlayerName] = useState<string>(''); // New state for player name
+  const [playerNameError, setPlayerNameError] = useState<string | null>(null); // State for player name validation error
 
   // Initialize selectedTheme based on current theme from next-themes on mount
   useEffect(() => {
@@ -71,6 +75,19 @@ const StartMenu: React.FC<StartMenuProps> = ({ onStartGame }) => {
     }
   };
 
+  const validatePlayerName = (name: string): boolean => {
+    const lowerCaseName = name.toLowerCase();
+    for (const keyword of DISALLOWED_KEYWORDS) {
+      if (lowerCaseName.includes(keyword)) {
+        setPlayerNameError(`The name contains a disallowed keyword: "${keyword}".`);
+        showError(`Player name cannot contain "${keyword}".`);
+        return false;
+      }
+    }
+    setPlayerNameError(null);
+    return true;
+  };
+
   const handleNextStep = () => {
     if (currentStep === 2 && selectedBoardSize !== null) {
       setCurrentStep(3);
@@ -79,12 +96,15 @@ const StartMenu: React.FC<StartMenuProps> = ({ onStartGame }) => {
     } else if (currentStep === 4 && selectedDifficulty !== null) {
       setCurrentStep(5); // Move to player name step
     } else if (currentStep === 5) { // Final step: start game
-      onStartGame(selectedBoardSize!, selectedTheme!, getHintCount(selectedDifficulty!), selectedGlowColorClass, selectedDifficulty!, playerName || 'Guest'); // Use 'Guest' if name is empty
+      if (validatePlayerName(playerName)) {
+        onStartGame(selectedBoardSize!, selectedTheme!, getHintCount(selectedDifficulty!), selectedGlowColorClass, selectedDifficulty!, playerName || 'Guest'); // Use 'Guest' if name is empty
+      }
     }
   };
 
   const handleBackStep = () => {
     setCurrentStep(prev => Math.max(1, prev - 1));
+    setPlayerNameError(null); // Clear error when going back
   };
 
   return (
@@ -212,10 +232,16 @@ const StartMenu: React.FC<StartMenuProps> = ({ onStartGame }) => {
                 type="text"
                 placeholder="Your Name (e.g., KnightMaster)"
                 value={playerName}
-                onChange={(e) => setPlayerName(e.target.value)}
+                onChange={(e) => {
+                  setPlayerName(e.target.value);
+                  setPlayerNameError(null); // Clear error on change
+                }}
                 className="w-full"
                 maxLength={20} // Limit name length
               />
+              {playerNameError && (
+                <p className="text-red-500 text-sm mt-2">{playerNameError}</p>
+              )}
             </CardContent>
             <CardFooter className="flex justify-between mt-6">
               <Button onClick={handleBackStep} variant="outline" className="py-2 px-4">Back</Button>
