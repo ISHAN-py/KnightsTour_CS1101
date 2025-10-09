@@ -169,9 +169,10 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
             setGameStatus("A Knight's Tour is possible!");
             console.log("Game status updated: A Knight's Tour is possible!");
           } else {
-            showError("No, a Knight's Tour is NOT possible from this position.");
-            setGameStatus("No Knight's Tour possible from here. Please start a new game.");
-            console.log("Game status updated: No Knight's Tour possible from here. Please start a new game.");
+            // Changed behavior: don't stop the game, just update status
+            setGameStatus("No complete tour possible from the current position, you may continue for a high score or start a new game.");
+            showSuccess("No complete tour possible from the current position."); // Use success toast for informational message
+            console.log("Game status updated: No complete tour possible from the current position.");
           }
           console.log("Setting isPossibleLoading to false.");
           setIsPossibleLoading(false);
@@ -196,7 +197,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
     return () => {
       workerRef.current?.terminate();
     };
-  }, []); // Removed isHintLoading and isPossibleLoading from dependencies
+  }, []);
 
   useEffect(() => {
     if (isTracingBack && tracebackIndex < pathHistory.length) {
@@ -278,7 +279,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
 
 
   const handleSquareClick = (row: number, col: number) => {
-    if (isTracingBack || gameStatus.includes("Game Over") || gameStatus.includes("Congratulations") || gameStatus.includes("No Knight's Tour possible") || isAnimatingMove) {
+    if (isTracingBack || gameStatus.includes("Game Over") || gameStatus.includes("Congratulations") || isAnimatingMove) {
       showError("Game is over, tracing back, or animating. Start a new game or wait!");
       return;
     }
@@ -306,7 +307,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
       showError("No hints remaining!");
       return;
     }
-    if (isHintLoading || isPossibleLoading || isTracingBack || gameStatus.includes("No Knight's Tour possible") || isAnimatingMove) {
+    if (isHintLoading || isPossibleLoading || isTracingBack || gameStatus.includes("Game Over") || gameStatus.includes("Congratulations") || isAnimatingMove) {
       showError("Please wait for the current action to finish or start a new game.");
       return;
     }
@@ -327,7 +328,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
       showError("Place the knight first to check possibility.");
       return;
     }
-    if (isHintLoading || isPossibleLoading || isTracingBack || gameStatus.includes("No Knight's Tour possible") || isAnimatingMove) {
+    if (isHintLoading || isPossibleLoading || isTracingBack || gameStatus.includes("Game Over") || gameStatus.includes("Congratulations") || isAnimatingMove) {
       showError("Please wait for the current action to finish or start a new game.");
       return;
     }
@@ -342,6 +343,20 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
       visitedCount,
       boardSize,
     });
+  };
+
+  const handleNewGameClick = () => {
+    // Only submit score if a game was actually in progress (more than just the initial placement)
+    if (visitedCount > 1 || (knightPos && visitedCount > 0 && !gameStatus.includes("Knight placed at"))) {
+      // Capture current state before resetting
+      const currentVisitedCount = visitedCount;
+      const currentHintsRemaining = hintsRemaining;
+      const currentIsPossibleCheckCount = isPossibleCheckCount;
+
+      // Submit score for the abandoned game
+      calculateAndSubmitScore(currentVisitedCount, currentHintsRemaining, 'lose');
+    }
+    initializeBoard(); // Then start a new game
   };
 
   return (
@@ -377,7 +392,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
       </div>
       <GameProgress visitedCount={visitedCount} boardSize={boardSize} />
       <Controls
-        onNewGame={initializeBoard}
+        onNewGame={handleNewGameClick} {/* Use the new handler */}
         onHint={handleHint}
         onCheckPossible={handleCheckPossible}
         gameStatus={gameStatus}

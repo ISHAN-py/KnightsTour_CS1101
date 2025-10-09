@@ -26,7 +26,8 @@ const Controls: React.FC<ControlsProps> = ({
   hintsRemaining,
   onReturnToMenu,
 }) => {
-  const isGameOverState = gameStatus.includes("No Knight's Tour possible") || gameStatus.includes("Game Over") || gameStatus.includes("Congratulations");
+  // Only disable buttons if the game is truly over (win or definite lose)
+  const isGameOverState = gameStatus.includes("Game Over") || gameStatus.includes("Congratulations");
 
   return (
     <div className="mt-6 flex flex-col items-center space-y-4 w-full max-w-md">
