@@ -28,7 +28,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
   const [board, setBoard] = useState<number[][]>([]);
   const [knightPos, setKnightPos] = useState<{ row: number; col: number } | null>(null);
   const [visitedCount, setVisitedCount] = useState(0);
-  const [possibleMoves, setPossibleMoves] = new Set<string>();
+  const [possibleMoves, setPossibleMoves] = useState<Set<string>>(new Set()); // Corrected this line
   const [gameStatus, setGameStatus] = useState<string>("");
   const [hintMove, setHintMove] = useState<{ row: number; col: number } | null>(null);
   const [isHintLoading, setIsHintLoading] = useState(false);
@@ -264,7 +264,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
       setVisitedCount(newVisitedCount);
       setHintMove(null);
 
-      const nextPossibleMoves = calculatePossibleMoves(animatingKnightTo.row, animatingKnightTo.col, newBoard);
+      const nextPossibleMoves = calculatePossibleMoves(animatingKnightTo.row, animatingKnightKnightTo.col, newBoard);
 
       if (newVisitedCount === boardSize * boardSize) {
         setGameStatus("Congratulations! You completed the Knight's Tour! Tracing back...");
@@ -322,7 +322,6 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
     }
     setIsHintLoading(true);
     setGameStatus("Calculating hint... this might take a moment for larger boards.");
-    // Removed hintRequestStartTime.current = Date.now();
     console.log("Sending GET_HINT message to worker."); // Debug log
     workerRef.current?.postMessage({
       type: 'GET_HINT',
@@ -345,7 +344,6 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
     setIsPossibleLoading(true);
     setGameStatus("Checking if tour is possible... this might take a moment for larger boards.");
     setIsPossibleCheckCount(prev => prev + 1);
-    // Removed possibleRequestStartTime.current = Date.now();
     console.log("Sending CHECK_POSSIBLE message to worker."); // Debug log
     workerRef.current?.postMessage({
       type: 'CHECK_POSSIBLE',
