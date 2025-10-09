@@ -345,19 +345,18 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
     });
   };
 
-  const handleNewGameClick = () => {
+  const handleNewGameClick = useCallback(() => {
     // Only submit score if a game was actually in progress (more than just the initial placement)
     if (visitedCount > 1 || (knightPos && visitedCount > 0 && !gameStatus.includes("Knight placed at"))) {
       // Capture current state before resetting
       const currentVisitedCount = visitedCount;
       const currentHintsRemaining = hintsRemaining;
-      const currentIsPossibleCheckCount = isPossibleCheckCount;
 
       // Submit score for the abandoned game
       calculateAndSubmitScore(currentVisitedCount, currentHintsRemaining, 'lose');
     }
     initializeBoard(); // Then start a new game
-  };
+  }, [visitedCount, knightPos, gameStatus, hintsRemaining, calculateAndSubmitScore, initializeBoard]);
 
   return (
     <div className="flex flex-col items-center p-4 relative">
@@ -392,7 +391,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
       </div>
       <GameProgress visitedCount={visitedCount} boardSize={boardSize} />
       <Controls
-        onNewGame={handleNewGameClick} {/* Use the new handler */}
+        onNewGame={handleNewGameClick}
         onHint={handleHint}
         onCheckPossible={handleCheckPossible}
         gameStatus={gameStatus}
