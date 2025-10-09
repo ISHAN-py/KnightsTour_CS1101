@@ -138,52 +138,43 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
 
     workerRef.current.onmessage = (event: MessageEvent) => {
       const { type, result, error } = event.data;
-      console.log(`Received message from worker: ${type}`); // Debug log
-
-      const handleResponse = (
-        isLoadingSetter: React.Dispatch<React.SetStateAction<boolean>>,
-        callback: () => void
-      ) => {
-        callback(); // Execute the result callback immediately
-        isLoadingSetter(false); // Clear loading state immediately
-        console.log(`Loading state reset for type: ${type}`); // Debug log
-      };
+      console.log(`Received message from worker: ${type}, Result: ${result}, Error: ${error}`); // Debug log
 
       if (error) {
-        handleResponse(
-          type === 'GET_HINT_RESULT' ? setIsHintLoading : setIsPossibleLoading,
-          () => {
-            showError(error);
-            setGameStatus(error);
-          }
-        );
+        showError(error);
+        setGameStatus(error);
+        if (type === 'GET_HINT_RESULT') setIsHintLoading(false);
+        if (type === 'CHECK_POSSIBLE_RESULT') setIsPossibleLoading(false);
+        console.log(`Loading state reset for type: ${type} due to error.`);
         return;
       }
 
       switch (type) {
         case 'GET_HINT_RESULT':
-          handleResponse(setIsHintLoading, () => {
-            if (result) {
-              setHintMove(result);
-              showSuccess(`Hint: Move to (${result.row}, ${result.col})`);
-              setGameStatus(`Hint: Move to (${result.row}, ${result.col})`);
-              setHintsRemaining(prev => Math.max(0, prev - 1));
-            } else {
-              showError("No hint available. It might be a dead end or no solution from here.");
-              setGameStatus("No hint available.");
-            }
-          });
+          if (result) {
+            setHintMove(result);
+            showSuccess(`Hint: Move to (${result.row}, ${result.col})`);
+            setGameStatus(`Hint: Move to (${result.row}, ${result.col})`);
+            setHintsRemaining(prev => Math.max(0, prev - 1));
+          } else {
+            showError("No hint available. It might be a dead end or no solution from here.");
+            setGameStatus("No hint available.");
+          }
+          setIsHintLoading(false);
+          console.log(`Loading state reset for GET_HINT_RESULT.`);
           break;
         case 'CHECK_POSSIBLE_RESULT':
-          handleResponse(setIsPossibleLoading, () => {
-            if (result) {
-              showSuccess("Yes, a Knight's Tour is possible from this position!");
-              setGameStatus("A Knight's Tour is possible!");
-            } else {
-              showError("No, a Knight's Tour is NOT possible from this position.");
-              setGameStatus("No Knight's Tour possible from here. Please start a new game.");
-            }
-          });
+          if (result) {
+            showSuccess("Yes, a Knight's Tour is possible from this position!");
+            setGameStatus("A Knight's Tour is possible!");
+            console.log("Game status updated: A Knight's Tour is possible!");
+          } else {
+            showError("No, a Knight's Tour is NOT possible from this position.");
+            setGameStatus("No Knight's Tour possible from here. Please start a new game.");
+            console.log("Game status updated: No Knight's Tour possible from here. Please start a new game.");
+          }
+          setIsPossibleLoading(false);
+          console.log(`Loading state reset for CHECK_POSSIBLE_RESULT.`);
           break;
         default:
           console.warn('Unknown message type from worker:', type);
@@ -205,7 +196,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
     return () => {
       workerRef.current?.terminate();
     };
-  }, [isHintLoading, isPossibleLoading]);
+  }, [isHintLoading, isPossibleLoading]); // Added isHintLoading and isPossibleLoading to dependencies
 
   useEffect(() => {
     if (isTracingBack && tracebackIndex < pathHistory.length) {
