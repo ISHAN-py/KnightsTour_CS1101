@@ -28,7 +28,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
   const [board, setBoard] = useState<number[][]>([]);
   const [knightPos, setKnightPos] = useState<{ row: number; col: number } | null>(null);
   const [visitedCount, setVisitedCount] = useState(0);
-  const [possibleMoves, setPossibleMoves] = useState<Set<string>>(new Set()); // Corrected this line
+  const [possibleMoves, setPossibleMoves] = useState<Set<string>>(new Set());
   const [gameStatus, setGameStatus] = useState<string>("");
   const [hintMove, setHintMove] = useState<{ row: number; col: number } | null>(null);
   const [isHintLoading, setIsHintLoading] = useState(false);
@@ -46,7 +46,6 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
 
   const workerRef = useRef<Worker | null>(null);
   const tracebackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  // Removed hintRequestStartTime and possibleRequestStartTime as they are no longer needed for delay
 
   const getDifficultyMultiplier = (diff: 'easy' | 'medium' | 'hard') => {
     switch (diff) {
@@ -264,7 +263,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
       setVisitedCount(newVisitedCount);
       setHintMove(null);
 
-      const nextPossibleMoves = calculatePossibleMoves(animatingKnightTo.row, animatingKnightKnightTo.col, newBoard);
+      const nextPossibleMoves = calculatePossibleMoves(animatingKnightTo.row, animatingKnightTo.col, newBoard); // Corrected typo here
 
       if (newVisitedCount === boardSize * boardSize) {
         setGameStatus("Congratulations! You completed the Knight's Tour! Tracing back...");
