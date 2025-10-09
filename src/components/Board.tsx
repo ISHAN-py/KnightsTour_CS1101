@@ -38,6 +38,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
   const [isPossibleCheckCount, setIsPossibleCheckCount] = useState(0);
   const [isTracingBack, setIsTracingBack] = useState(false);
   const [tracebackIndex, setTracebackIndex] = useState(0);
+  const [currentScore, setCurrentScore] = useState(0); // New state for current score
 
   // Animation states
   const [animatingKnightFrom, setAnimatingKnightFrom] = useState<{ row: number; col: number } | null>(null);
@@ -56,12 +57,20 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
     }
   };
 
-  const calculateAndSubmitScore = useCallback(async (finalVisitedCount: number, finalHintsRemaining: number, gameOutcome: 'win' | 'lose') => {
-    const baseScore = (finalVisitedCount * 100) - (isPossibleCheckCount * 20) + (finalHintsRemaining * 10);
-    const multiplier = getDifficultyMultiplier(difficulty);
-    const finalScore = Math.max(0, Math.round(baseScore * multiplier));
+  const calculateScore = useCallback((vCount: number, hRemaining: number, pCheckCount: number, diff: 'easy' | 'medium' | 'hard') => {
+    const baseScore = (vCount * 100) - (pCheckCount * 20) + (hRemaining * 10);
+    const multiplier = getDifficultyMultiplier(diff);
+    return Math.max(0, Math.round(baseScore * multiplier));
+  }, []);
 
-    showSuccess(`Final Score: ${finalScore} (Base: ${baseScore}, Multiplier: ${multiplier.toFixed(1)})`);
+  useEffect(() => {
+    setCurrentScore(calculateScore(visitedCount, hintsRemaining, isPossibleCheckCount, difficulty));
+  }, [visitedCount, hintsRemaining, isPossibleCheckCount, difficulty, calculateScore]);
+
+  const calculateAndSubmitScore = useCallback(async (finalVisitedCount: number, finalHintsRemaining: number, gameOutcome: 'win' | 'lose') => {
+    const finalScore = calculateScore(finalVisitedCount, finalHintsRemaining, isPossibleCheckCount, difficulty);
+
+    showSuccess(`Final Score: ${finalScore} (Base: ${(finalVisitedCount * 100) - (isPossibleCheckCount * 20) + (finalHintsRemaining * 10)}, Multiplier: ${getDifficultyMultiplier(difficulty).toFixed(1)})`);
 
     try {
       const tableName = `high_scores_${boardSize}x${boardSize}`;
@@ -71,7 +80,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
           {
             player_name: playerName, // Use the player name from props
             score: finalScore,
-            difficulty_multiplier: multiplier,
+            difficulty_multiplier: getDifficultyMultiplier(difficulty),
             board_size: boardSize,
           },
         ]);
@@ -87,7 +96,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
       console.error('Exception submitting high score:', err);
       showError('An unexpected error occurred while submitting high score.');
     }
-  }, [boardSize, difficulty, isPossibleCheckCount, playerName]); // Add playerName to dependencies
+  }, [boardSize, difficulty, isPossibleCheckCount, playerName, calculateScore]); // Add playerName to dependencies
 
   const initializeBoard = useCallback(() => {
     const newBoard: number[][] = Array(boardSize).fill(0).map(() => Array(boardSize).fill(0));
@@ -362,6 +371,9 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
     <div className="flex flex-col items-center p-4 relative">
       <GameInfoSidebar />
       <h2 className="text-2xl font-bold mb-4">Knight's Tour</h2>
+      <div className="text-xl font-semibold mb-4">
+        Current Score: {currentScore}
+      </div>
       <div className={cn(
         `relative grid grid-cols-${boardSize} border border-gray-400 dark:border-gray-600 transition-shadow duration-300 ease-in-out`,
         underglowColorClass
