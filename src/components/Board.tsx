@@ -160,8 +160,8 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
             showError("No hint available. It might be a dead end or no solution from here.");
             setGameStatus("No hint available.");
           }
+          console.log("Setting isHintLoading to false.");
           setIsHintLoading(false);
-          console.log(`Loading state reset for GET_HINT_RESULT.`);
           break;
         case 'CHECK_POSSIBLE_RESULT':
           if (result) {
@@ -173,11 +173,11 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
             setGameStatus("No Knight's Tour possible from here. Please start a new game.");
             console.log("Game status updated: No Knight's Tour possible from here. Please start a new game.");
           }
+          console.log("Setting isPossibleLoading to false.");
           setIsPossibleLoading(false);
-          console.log(`Loading state reset for CHECK_POSSIBLE_RESULT.`);
           break;
         default:
-          console.warn('Unknown message type from worker:', type);
+          console.warn('Worker: Unknown message type:', type);
       }
     };
 
@@ -196,7 +196,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
     return () => {
       workerRef.current?.terminate();
     };
-  }, [isHintLoading, isPossibleLoading]); // Added isHintLoading and isPossibleLoading to dependencies
+  }, []); // Removed isHintLoading and isPossibleLoading from dependencies
 
   useEffect(() => {
     if (isTracingBack && tracebackIndex < pathHistory.length) {
@@ -254,7 +254,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
       setVisitedCount(newVisitedCount);
       setHintMove(null);
 
-      const nextPossibleMoves = calculatePossibleMoves(animatingKnightTo.row, animatingKnightTo.col, newBoard); // Corrected typo here
+      const nextPossibleMoves = calculatePossibleMoves(animatingKnightTo.row, animatingKnightTo.col, newBoard);
 
       if (newVisitedCount === boardSize * boardSize) {
         setGameStatus("Congratulations! You completed the Knight's Tour! Tracing back...");
