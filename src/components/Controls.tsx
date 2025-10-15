@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'; // Keep for Main Menu
 import { GlassButton } from './GlassButton'; // Import the new GlassButton
 import { RotateCcw, Lightbulb, HelpCircle, Home, ArrowDown } from 'lucide-react'; // Import icons, including ArrowDown
 import { cn } from '@/lib/utils'; // Import cn for conditional classNames
+import { useIsMobile } from '@/hooks/use-mobile'; // Import useIsMobile hook
 
 interface ControlsProps {
   onNewGame: () => void;
@@ -27,6 +28,7 @@ const Controls: React.FC<ControlsProps> = ({
   hintsRemaining,
   onReturnToMenu,
 }) => {
+  const isMobile = useIsMobile(); // Determine if on a mobile device
   // Only disable buttons if the game is truly over (win or definite lose)
   const isGameOverState = gameStatus.includes("Game Over") || gameStatus.includes("Congratulations");
 
@@ -67,11 +69,13 @@ const Controls: React.FC<ControlsProps> = ({
         </Button>
       </div>
 
-      {/* Scroll down for leaderboard text */}
-      <div className="mt-6 flex items-center text-muted-foreground text-sm animate-bounce">
-        <ArrowDown className="h-4 w-4 mr-1" />
-        <span>Scroll down for leaderboard</span>
-      </div>
+      {/* Scroll down for leaderboard text, only visible on mobile */}
+      {isMobile && (
+        <div className="mt-6 flex items-center text-muted-foreground text-sm animate-bounce">
+          <ArrowDown className="h-4 w-4 mr-1" />
+          <span>Scroll down for leaderboard</span>
+        </div>
+      )}
     </div>
   );
 };
