@@ -2,9 +2,9 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from "@/components/ui/sheet"; // Import SheetClose
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Menu } from "lucide-react";
+import { Menu, X } from "lucide-react"; // Import X icon
 import HowToPlay from "./HowToPlay";
 import LogicExplanationContent from "./LogicExplanation";
 import ScoringRules from "./ScoringRules"; // Import the new ScoringRules component
@@ -28,6 +28,11 @@ const GameInfoSidebar: React.FC<GameInfoSidebarProps> = ({ open, onOpenChange, t
         <SheetHeader className="p-6 pb-2">
           <SheetTitle className="text-3xl font-bold">Game Information</SheetTitle>
         </SheetHeader>
+        {/* Larger close button */}
+        <SheetClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
+          <X className="h-6 w-6" /> {/* Increased icon size */}
+          <span className="sr-only">Close</span>
+        </SheetClose>
         <Tabs defaultValue="how-to-play" className="flex flex-col flex-grow overflow-hidden">
           <TabsList className="grid w-full grid-cols-3 rounded-none border-b bg-background p-0 px-6">
             <TabsTrigger value="how-to-play" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none">
