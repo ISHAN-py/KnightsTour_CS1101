@@ -9,6 +9,8 @@ import AnimatedKnight from './AnimatedKnight';
 import { cn } from '@/lib/utils';
 import { VALID_STARTING_POINTS } from '@/utils/knightTourConfig';
 import { supabase } from '@/integrations/supabase/client';
+import { Github, Twitter, Instagram } from 'lucide-react'; // Import social media icons
+import { Button } from '@/components/ui/button'; // Import Button component
 
 interface BoardProps {
   boardSize: number;
@@ -29,7 +31,7 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
   const [board, setBoard] = useState<number[][]>([]);
   const [knightPos, setKnightPos] = useState<{ row: number; col: number } | null>(null);
   const [visitedCount, setVisitedCount] = useState(0);
-  const [possibleMoves, setPossibleMoves] = useState<Set<string>>(new Set());
+  const [possibleMoves, setPossibleMoves] = new Set();
   const [gameStatus, setGameStatus] = useState<string>("");
   const [hintMove, setHintMove] = useState<{ row: number; col: number } | null>(null);
   const [isHintLoading, setIsHintLoading] = useState(false);
@@ -373,6 +375,26 @@ const Board: React.FC<BoardProps> = ({ boardSize, onReturnToMenu, initialHints, 
   return (
     <div className="flex flex-col items-center p-4 relative">
       <GameInfoSidebar open={isSidebarOpen} onOpenChange={setIsSidebarOpen} totalEntries={totalEntries} />
+
+      {/* Social Media Icons */}
+      <div className="absolute top-4 right-4 flex space-x-2 z-20">
+        <Button variant="ghost" size="icon" asChild>
+          <a href="https://github.com/ISHAN-py" target="_blank" rel="noopener noreferrer" aria-label="GitHub profile">
+            <Github className="h-6 w-6 text-gray-700 dark:text-gray-300 hover:text-primary transition-colors" />
+          </a>
+        </Button>
+        <Button variant="ghost" size="icon" asChild>
+          <a href="https://x.com/ishaxn10" target="_blank" rel="noopener noreferrer" aria-label="Twitter profile">
+            <Twitter className="h-6 w-6 text-gray-700 dark:text-gray-300 hover:text-primary transition-colors" />
+          </a>
+        </Button>
+        <Button variant="ghost" size="icon" asChild>
+          <a href="https://www.instagram.com/ishaxn.10/" target="_blank" rel="noopener noreferrer" aria-label="Instagram profile">
+            <Instagram className="h-6 w-6 text-gray-700 dark:text-gray-300 hover:text-primary transition-colors" />
+          </a>
+        </Button>
+      </div>
+
       <h2 className="text-2xl font-bold mb-4">Knight's Tour</h2>
       <div className="text-xl font-semibold mb-4">
         Current Score: {currentScore}
