@@ -1,7 +1,8 @@
 import React from 'react';
 import { Button } from '@/components/ui/button'; // Keep for Main Menu
 import { GlassButton } from './GlassButton'; // Import the new GlassButton
-import { RotateCcw, Lightbulb, HelpCircle, Home } from 'lucide-react'; // Import icons
+import { RotateCcw, Lightbulb, HelpCircle, Home, ArrowDown } from 'lucide-react'; // Import icons, including ArrowDown
+import { cn } from '@/lib/utils'; // Import cn for conditional classNames
 
 interface ControlsProps {
   onNewGame: () => void;
@@ -64,6 +65,12 @@ const Controls: React.FC<ControlsProps> = ({
         >
           <Home className="mr-2 h-4 w-4" /> Main Menu
         </Button>
+      </div>
+
+      {/* Scroll down for leaderboard text */}
+      <div className="mt-6 flex items-center text-muted-foreground text-sm animate-bounce">
+        <ArrowDown className="h-4 w-4 mr-1" />
+        <span>Scroll down for leaderboard</span>
       </div>
     </div>
   );

@@ -104,6 +104,7 @@ export default {
         "accordion-up": "accordion-up 0.2s ease-out",
         "neon-pulse": "neon-pulse 1.5s ease-in-out infinite",
         "knight-jump": "knight-jump 0.5s ease-in-out",
+        "bounce": "bounce 1s infinite", // Added bounce animation
       },
     },
   },
