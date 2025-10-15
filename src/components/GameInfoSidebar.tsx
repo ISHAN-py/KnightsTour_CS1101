@@ -2,12 +2,13 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from "@/components/ui/sheet"; // Import SheetClose
+import { Sheet, SheetClose, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"; // Import SheetClose
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Menu, X } from "lucide-react"; // Import X icon
 import HowToPlay from "./HowToPlay";
 import LogicExplanationContent from "./LogicExplanation";
 import ScoringRules from "./ScoringRules"; // Import the new ScoringRules component
+import { CustomSheetContent } from './CustomSheetContent'; // Import the new CustomSheetContent
 
 interface GameInfoSidebarProps {
   open: boolean;
@@ -24,11 +25,11 @@ const GameInfoSidebar: React.FC<GameInfoSidebarProps> = ({ open, onOpenChange, t
           <span className="sr-only">Open game info</span>
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-full sm:max-w-lg flex flex-col p-0">
+      <CustomSheetContent side="left" className="w-full sm:max-w-lg flex flex-col p-0">
         <SheetHeader className="p-6 pb-2">
           <SheetTitle className="text-3xl font-bold">Game Information</SheetTitle>
         </SheetHeader>
-        {/* Larger close button */}
+        {/* The single, larger close button */}
         <SheetClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
           <X className="h-6 w-6" /> {/* Increased icon size */}
           <span className="sr-only">Close</span>
@@ -64,7 +65,7 @@ const GameInfoSidebar: React.FC<GameInfoSidebarProps> = ({ open, onOpenChange, t
             )}
           </div>
         </Tabs>
-      </SheetContent>
+      </CustomSheetContent>
     </Sheet>
   );
 };
