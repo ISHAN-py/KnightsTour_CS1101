@@ -1,1 +1,1 @@
-# Welcome to your Dyad app
+An Interactive Knight's Tour
